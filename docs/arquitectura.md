@@ -1,27 +1,29 @@
 # Arquitectura de Software — Control Electoral Móvil
 
-## 1. Propósito y Línea Base
+## 1. Propósito y Línea Base del Proyecto
 
-Este documento define la arquitectura de software de la aplicación móvil de **Control Electoral para Organización Política**, desarrollada en React Native (Expo) con entrega en formato APK instalable para Android (**RNF-01**).
+Este documento define la arquitectura de software de la aplicación móvil de **Control Electoral para Organización Política**, desarrollada en React Native (Expo) y distribuida como archivo **APK instalable para Android** (**RNF-01**).
 
-Toda la estructura aquí descrita respeta de forma estricta la línea base consensuada por el equipo:
-- **20 Requerimientos Funcionales (RF-01 a RF-20)**
-- **8 Requerimientos No Funcionales (RNF-01 a RNF-08)**
-- **6 Supuestos Adoptados (S-01 a S-06)**
-- **10 Registros de Decisiones Arquitectónicas (ADR-01 a ADR-10)**
+Su elaboración precede a la instalación de dependencias y codificación (**RNF-08**) y garantiza el cumplimiento estricto e íntegro de la línea base consensuada por el equipo:
+- **20 Requerimientos Funcionales:** `RF-01` a `RF-20`
+- **8 Requerimientos No Funcionales:** `RNF-01` a `RNF-08`
+- **6 Supuestos Adoptados:** `S-01` a `S-06`
+- **10 Decisiones Arquitectónicas:** `ADR-01` a `ADR-10`
 
 ---
 
-## 2. Estilo Arquitectónico: Clean Architecture + Expo Router
+## 2. Estilo Arquitectónico: Clean Architecture (4 Capas) + Expo Router
 
-Para garantizar mantenibilidad, testabilidad y facilidad de evolución (**RNF-05**), el proyecto implementa **Clean Architecture** organizada en tres capas concéntricas con inversión de dependencias, desacoplada del sistema de enrutamiento basado en archivos de **Expo Router (ADR-06)**.
+Para facilitar el mantenimiento, la corrección de errores y la evolución del sistema (**RNF-05**), el proyecto adopta **Clean Architecture** con separación estricta en cuatro capas dentro de `src/`, desacopladas del sistema de enrutamiento basado en archivos de **Expo Router** en `app/` (**ADR-06**).
 
 ### Regla de Dependencias
-Las dependencias apuntan **siempre hacia adentro** (hacia `src/domain/`):
-- **`app/` (Enrutamiento):** Solo define pantallas, layouts y guardas de navegación. Nunca contiene lógica de negocio ni acceso directo a SQLite o Supabase.
-- **`src/presentation/` (Presentación):** Componentes visuales, tema institucional, formularios (React Hook Form), estado global (Zustand) y caché remota (TanStack Query). Invoca **exclusivamente** casos de uso de `src/domain/`.
-- **`src/domain/` (Dominio — Núcleo puro):** Entidades, contratos/interfaces de repositorio, casos de uso y esquemas de validación (Zod). **No depende** de React, Expo, Supabase ni SQLite.
-- **`src/data/` (Datos e Infraestructura):** Implementaciones concretas de los repositorios del dominio, fuentes de datos remotas (Supabase Auth, PostgreSQL, Storage, Realtime, Edge Functions), persistencia local (SQLite + FileSystem) y servicios nativos (Cámara, GPS, NetInfo, Sentry).
+Las dependencias apuntan **siempre hacia el núcleo (`src/domain/`)**:
+
+1. **`app/` (Enrutamiento — ADR-06):** Contiene exclusivamente rutas, layouts y la guardia de redirección inicial. No aloja lógica de negocio, validaciones ni acceso directo a bases de datos o SDKs.
+2. **`src/presentation/` (Presentación):** Interfaces accesibles (**RNF-07**), identidad visual del partido y animaciones con Lottie + Reanimated (**RNF-06**), formularios con React Hook Form (**ADR-08**), estado de cliente en Zustand y caché remota con TanStack Query (**ADR-07**). Solo interactúa con `src/domain/` mediante casos de uso.
+3. **`src/domain/` (Dominio — Núcleo Puro):** Entidades del negocio, contratos de repositorios, puertos de servicios nativos, casos de uso, lógica geográfica (Haversine) y esquemas de validación con Zod (**ADR-09**). **Cero dependencias** de React, Expo, Supabase, SQLite o UI.
+4. **`src/data/` (Datos):** Implementaciones concretas de los repositorios del dominio, mappers (DTO ↔ Entidad) y *datasources* encargados de consultas relacionales en SQLite/Outbox (**ADR-03**) y consumo de tablas, RPCs, Storage, Edge Functions y Realtime de Supabase (**ADR-01**, **ADR-07**).
+5. **`src/infrastructure/` (Infraestructura — Frameworks & Drivers):** Adaptadores de hardware, red, almacenamiento y SDKs externos (cliente Supabase + SecureStore, motor SQLite y migraciones, FileSystem con control de almacenamiento, Expo Camera + análisis de nitidez, Expo Location con muestreo GPS, NetInfo Sync Manager con control de concurrencia, Sentry con filtrado PII y contenedor de inyección de dependencias).
 
 ```mermaid
 flowchart TB
@@ -30,179 +32,224 @@ flowchart TB
     end
 
     subgraph Presentation["src/presentation/"]
-        P1["UI Components (Lottie + Reanimated)"]
-        P2["Forms (React Hook Form — ADR-08)"]
-        P3["State (Zustand + TanStack Query — ADR-07)"]
+        P1["UI + Theme + Lottie/Reanimated (RNF-06, RNF-07)"]
+        P2["Forms: React Hook Form + Controller (ADR-08)"]
+        P3["State: Zustand + TanStack Query (ADR-07)"]
     end
 
     subgraph Domain["src/domain/ (Núcleo Puro — RNF-05)"]
-        D1["Entities"]
-        D2["Use Cases"]
-        D3["Repository Interfaces"]
-        D4["Validators (Zod — ADR-09)"]
+        D1["Entities & Use Cases"]
+        D2["Repository Interfaces & Service Ports"]
+        D3["Validators: Zod (ADR-09) & Geo Utils (S-06)"]
     end
 
-    subgraph Data["src/data/ (Infraestructura)"]
-        DA1["Repository Implementations"]
-        DA2["Remote DS: Supabase Auth / DB / Storage / Realtime (ADR-01, ADR-02, ADR-07)"]
-        DA3["Local DS: expo-sqlite + Outbox + FileSystem (ADR-03)"]
-        DA4["Services: Camera + GPS (ADR-04) | NetInfo Sync (ADR-10) | Sentry (ADR-05)"]
+    subgraph Data["src/data/"]
+        DA1["Repository Implementations & Mappers"]
+        DA2["Local DS: SQLite Queries & Outbox (ADR-03)"]
+        DA3["Remote DS: Supabase Queries, RPC, Edge Functions & Realtime (ADR-01, ADR-07)"]
+    end
+
+    subgraph Infrastructure["src/infrastructure/"]
+        I1["Supabase Client + SecureStore (ADR-01, ADR-02)"]
+        I2["SQLite Connection + Migrations + FileSystem (ADR-03)"]
+        I3["Camera + Sharpness + GPS Burst (ADR-04)"]
+        I4["NetInfo Sync Manager + Mutex (ADR-10)"]
+        I5["Sentry SDK + PII Scrubber (ADR-05)"]
+        I6["DI Container (Cableado)"]
     end
 
     Routing --> Presentation
     Presentation --> Domain
-    Data -. implementa .-> Domain
+    Data -. implementa repositorios .-> Domain
+    Infrastructure -. implementa puertos .-> Domain
+    Data --> Infrastructure
+    I6 -. inyecta dependencias .-> Presentation
 ```
 
 ---
 
-## 3. Estructura de Carpetas
+## 3. Estructura de Carpetas del Repositorio
 
-Por restricción de **ADR-06**, todo archivo dentro de `app/` es interpretado como una ruta por Expo Router; por ello, las capas de Clean Architecture residen completamente fuera de `app/`, dentro de `src/`.
+En cumplimiento de **ADR-06**, todo código de arquitectura y componentes reutilizables se ubica fuera de `app/` para que Expo Router no lo interprete como rutas.
 
 ```text
 .
 ├── docs/
-│   ├── arquitectura.md               # Este documento (RNF-08)
-│   └── adr/                          # Fichas ADR-01 a ADR-10
-├── app/                              # Solo rutas de Expo Router (ADR-06)
-│   ├── _layout.tsx                   # Providers + Guard (sesión, rol, cambio de clave)
-│   ├── index.tsx                     # Splash y redirección inicial
-│   ├── (auth)/                       # Login, primer ingreso obligatorio, recuperación
-│   ├── (veedor)/                     # Mesas asignadas, formulario de acta, cola offline
-│   ├── (recinto)/                    # Gestión de veedores, reasignación, actas y conflictos
-│   └── (provincial)/                 # Exit Poll en vivo, recintos, coordinadores, auditoría GPS
+│   ├── arquitectura.md                     # Documentación arquitectónica (RNF-08)
+│   └── adr/                                # ADR-01.md a ADR-10.md
+├── app/                                    # Solo rutas de Expo Router (ADR-06)
+│   ├── _layout.tsx                         # Sentry, QueryClient, NetInfo y Guard de sesión/rol/clave
+│   ├── index.tsx                           # Pantalla inicial de evaluación y redirección
+│   ├── (auth)/
+│   │   ├── _layout.tsx
+│   │   ├── login.tsx                       # Acceso restringido (sin registro público)
+│   │   ├── primer-ingreso.tsx              # Cambio obligatorio de clave temporal (RF-02)
+│   │   ├── recuperar-clave.tsx             # Solicitud de enlace solo a correos verificados (RF-04)
+│   │   └── nueva-clave.tsx                 # Destino de deep link de recuperación (ADR-02)
+│   ├── (veedor)/
+│   │   ├── _layout.tsx
+│   │   ├── index.tsx                       # Mis mesas asignadas y estado de actas (RF-14, RF-18)
+│   │   ├── mesa/[mesaId].tsx               # Selección Alcaldía / Prefectura (RF-09, S-02)
+│   │   ├── acta-form.tsx                   # Registro/corrección + cámara + GPS (RF-09 a RF-13, RF-19)
+│   │   └── cola-sync.tsx                   # Detalle de cola offline y estados (RF-14, RF-16)
+│   ├── (recinto)/
+│   │   ├── _layout.tsx
+│   │   ├── index.tsx                       # Panel del recinto y alertas de conflicto (RF-18, S-04)
+│   │   ├── mesas.tsx                       # Asignación y reasignación instantánea (RF-08, RF-20, S-05)
+│   │   ├── veedores.tsx                    # Registro de veedores y sustituto express (RF-01, RF-20)
+│   │   ├── actas.tsx                       # Consulta y edición de actas del recinto (RF-13)
+│   │   └── conflictos.tsx                  # Comparación y resolución de versiones (S-04)
+│   └── (provincial)/
+│       ├── _layout.tsx
+│       ├── index.tsx                       # Tablero Exit Poll en tiempo real y avance (RF-15, ADR-07)
+│       ├── recintos.tsx                    # Consulta, creación y asignación única de coord. (RF-06, RF-07)
+│       ├── coordinadores.tsx               # Gestión y creación de coord. de recinto (RF-01, RF-02)
+│       └── acta-auditoria/[id].tsx         # Evidencia fotográfica + mapa GPS con alerta >300m (S-06)
 ├── src/
-│   ├── domain/                       # Capa de Dominio (TypeScript puro)
-│   │   ├── entities/                 # User, Recinto, Mesa, Partido, Candidato, Acta, Conflicto
-│   │   ├── repositories/             # Interfaces: AuthRepo, TerritorioRepo, ActaRepo, SyncRepo
-│   │   ├── usecases/                 # Casos de uso atómicos por requerimiento
-│   │   ├── validators/               # Esquemas Zod: cédula ecuatoriana, correo y actas (ADR-09)
-│   │   └── utils/                    # Cálculo Haversine para alerta >300m (S-06)
-│   ├── data/                         # Capa de Datos e Infraestructura
+│   ├── domain/                             # CAPA 1: Dominio puro
+│   │   ├── entities/                       # User, Recinto, Mesa, Organizacion, Candidato, Acta, Conflicto, SyncItem
+│   │   ├── repositories/                   # IAuthRepository, ITerritorioRepository, IActaRepository, IEscrutinioRepository, ISyncRepository
+│   │   ├── ports/                          # ILocationPort, ISharpnessPort, IFileStoragePort, INetworkMonitorPort, ICrashMonitorPort
+│   │   ├── usecases/                       # Casos de uso atómicos (auth/, territorio/, actas/, escrutinio/, sync/)
+│   │   ├── validators/                     # Esquemas Zod: cedulaEcuador.ts, userSchema.ts, actaSchema.ts (ADR-09)
+│   │   └── utils/                          # geoDistance.ts (Haversine y umbral 300m — S-06)
+│   ├── data/                               # CAPA 2: Persistencia, mappers y repositorios
 │   │   ├── datasources/
-│   │   │   ├── remote/               # Cliente Supabase, Edge Functions, Realtime, Storage
-│   │   │   └── local/                # SQLite, migraciones, tabla outbox, almacenamiento de fotos
-│   │   ├── repositories/             # Implementaciones que unen local + remoto
-│   │   └── services/                 # NetInfo Sync Engine, Sharpness Check, GPS Burst, Sentry
-│   ├── presentation/                 # Capa de Presentación
-│   │   ├── theme/                    # Paleta de la organización política y accesibilidad (RNF-06/07)
-│   │   ├── store/                    # Stores Zustand (auth, sync, feedback) (ADR-07)
-│   │   ├── hooks/                    # Hooks de TanStack Query, Realtime y RHF (ADR-07/08)
-│   │   └── components/               # Componentes accesibles, FeedbackOverlay (Lottie + Reanimated)
-│   └── shared/                       # Constantes, tipos globales y utilidades transversales
+│   │   │   ├── local/                      # actaLocalDS.ts, outboxLocalDS.ts, catalogLocalDS.ts (ADR-03)
+│   │   │   └── remote/                     # authRemoteDS.ts, territorioRemoteDS.ts, actaRemoteDS.ts, realtimeDS.ts
+│   │   ├── mappers/                        # Mappers SQLite/Supabase <-> Entidades de Domain
+│   │   └── repositories/                   # AuthRepositoryImpl, TerritorioRepositoryImpl, ActaRepositoryImpl, EscrutinioRepositoryImpl, SyncRepositoryImpl
+│   ├── infrastructure/                     # CAPA 3: SDKs externos, hardware y DI
+│   │   ├── supabase/                       # supabaseClient.ts, secureStoreAdapter.ts (ADR-01, ADR-02)
+│   │   ├── sqlite/                         # dbConnection.ts, migrations.ts (ADR-03)
+│   │   ├── storage/                        # fileSystemPhotoAdapter.ts (guardado local y validación de espacio)
+│   │   ├── device/                         # gpsLocationAdapter.ts, sharpnessAnalyzer.ts (ADR-04)
+│   │   ├── network/                        # netInfoSyncManager.ts (escucha NetInfo + lock mutex — ADR-10)
+│   │   ├── monitoring/                     # sentryAdapter.ts (cierres nativos/JS, breadcrumbs, filtro PII — ADR-05)
+│   │   └── di/                             # container.ts (inyección de dependencias)
+│   ├── presentation/                       # CAPA 4: UI, estado y formularios
+│   │   ├── theme/                          # Colores de la organización política y escalas accesibles (RNF-06/07)
+│   │   ├── store/                          # Zustand: authStore.ts, syncStore.ts, feedbackStore.ts (ADR-07)
+│   │   ├── hooks/                          # Hooks de TanStack Query, suscripción Realtime y formularios (ADR-07/08)
+│   │   └── components/                     # FeedbackOverlay (Lottie + Reanimated), ConfirmSheet, ControlledInput, MapAuditView, StatusBadge
+│   └── shared/                             # Constantes, tipos de error y utilidades transversales
+├── assets/
+│   └── lottie/                             # Animaciones JSON (loading, success, error, warning, syncing)
 └── supabase/
-    ├── migrations/                   # Esquema SQL, restricciones, RPC idempotente y políticas RLS
-    ├── seed.sql                      # Recintos, 5 organizaciones, candidatos y Provincial (RF-05, S-01)
+    ├── migrations/                         # Esquema PostgreSQL, constraints, RPC de versionado y políticas RLS
+    ├── seed.sql                            # Provincia/cantón, recintos, 5 organizaciones, candidatos y Coord. Provincial (RF-05, S-01)
     └── functions/
-        └── create-managed-user/      # Creación jerárquica de cuentas sin cerrar sesión (ADR-01/02)
+        └── create-managed-user/            # Edge Function para creación jerárquica de usuarios vía API (ADR-01, ADR-02)
 ```
 
 ---
 
-## 4. Trazabilidad de Decisiones Técnicas (ADRs)
+## 4. Matriz de Trazabilidad (ADRs ↔ Capas ↔ Requerimientos)
 
-| ADR | Decisión Tecnológica | Capa Principal | Requerimientos / Supuestos |
+| ADR | Decisión Consensuada | Capas Responsables | Requerimientos / Supuestos |
 | :--- | :--- | :--- | :--- |
-| **ADR-01** | **Supabase Auth + RLS + Edge Function** para gestión jerárquica de usuarios y control de clave temporal | `data/remote` + Backend | RF-01, RF-02, RF-03, RF-04, RNF-02, S-01 |
-| **ADR-02** | **Supabase + SMTP personalizado** para verificación de correo y recuperación con enlaces de un solo uso | Backend (Auth/SMTP) | RF-01, RF-03, RF-04, RNF-02 |
-| **ADR-03** | **SQLite (`expo-sqlite`) + tabla `outbox` + UUID por acta** como fuente de verdad offline y ruta local de foto | `data/local` | RF-14, RF-16, RNF-03, RNF-04, S-04 |
-| **ADR-04** | **`expo-camera` (en vivo + nitidez) + `expo-location` (múltiples lecturas)** sin acceso a galería | `data/services` | RF-11, RF-12, RF-15, S-06 |
-| **ADR-05** | **Sentry React Native SDK** con captura de cierres nativos/JS, breadcrumbs, buffer offline y filtrado PII | `data/services` + `app/` | RF-17, RNF-02, RNF-03 |
-| **ADR-06** | **Expo Router** con grupos de rutas aislados por rol y redirección controlada por sesión/rol/clave | `app/` | RF-01, RF-02, RF-18, RNF-05, RNF-07 |
-| **ADR-07** | **Zustand + TanStack Query + Supabase Realtime** encapsulado en repositorios | `presentation/` + `data/` | RF-14, RF-15, RF-16, RNF-05 |
-| **ADR-08** | **React Hook Form** con `Controller` para formularios de usuarios, territorio y actas | `presentation/` | RF-02, RF-06, RF-08, RF-09, RF-13, RF-20, RNF-04, RNF-07, S-03 |
-| **ADR-09** | **Zod** centralizado para validar cédula ecuatoriana, correos y coherencia matemática de actas | `domain/validators` | RF-02, RF-10, RF-12, RF-19, RNF-02, S-02, S-03 |
-| **ADR-10** | **`@react-native-community/netinfo` + cola SQLite** con bloqueo de concurrencia e idempotencia | `data/services` + `data/local` | RF-14, RF-16, RNF-03, RNF-04, S-04 |
+| **ADR-01** | **Supabase Auth + API servidor + RLS + flag de clave temporal** | `infrastructure/supabase`, `data/remote`, Backend | RF-01, RF-02, RF-03, RF-04, RNF-02, S-01 |
+| **ADR-02** | **Supabase + SMTP personalizado** (enlaces de uso único con expiración, dominio propio, deep links) | `infrastructure/supabase`, `app/(auth)`, Backend | RF-01, RF-03, RF-04, RNF-02 |
+| **ADR-03** | **SQLite (`expo-sqlite`) + Outbox + UUID por acta + foto en disco local + control de versiones** | `infrastructure/sqlite`, `infrastructure/storage`, `data/local` | RF-14, RF-16, RNF-03, RNF-04, S-04 |
+| **ADR-04** | **`expo-camera` en vivo + medición de nitidez + `expo-location` con múltiples lecturas GPS** | `domain/ports`, `infrastructure/device`, `presentation/` | RF-11, RF-12, RF-15, S-06 |
+| **ADR-05** | **Sentry React Native SDK** (cierres nativos/JS, breadcrumbs, buffer offline y filtrado de PII) | `domain/ports`, `infrastructure/monitoring`, `app/_layout` | RF-17, RNF-02, RNF-03 |
+| **ADR-06** | **Expo Router** con grupos por rol y guardia de redirección (sesión, rol, primer cambio de clave) | `app/` | RF-01, RF-02, RF-18, RNF-05, RNF-07 |
+| **ADR-07** | **Zustand + TanStack Query + Supabase Realtime** encapsulado tras repositorios | `presentation/store`, `presentation/hooks`, `data/repositories` | RF-14, RF-15, RF-16, RNF-05 |
+| **ADR-08** | **React Hook Form** (`Controller`) para formularios de usuarios, territorio, reemplazos y actas | `presentation/components`, `presentation/hooks` | RF-02, RF-06, RF-08, RF-09, RF-13, RF-20, RNF-04, RNF-07, S-03 |
+| **ADR-09** | **Zod** centralizado para cédula ecuatoriana, correos y coherencia matemática de actas | `domain/validators` | RF-02, RF-10, RF-12, RF-19, RNF-02, S-02, S-03 |
+| **ADR-10** | **`@react-native-community/netinfo` + cola transaccional SQLite + UUID idempotente + lock** | `infrastructure/network`, `data/local`, `domain/usecases/sync` | RF-14, RF-16, RNF-03, RNF-04, S-04 |
 
 ---
 
-## 5. Flujos Críticos de la Arquitectura
+## 5. Diseño de los Flujos Críticos
 
-### 5.1 Autenticación, Jerarquía de Cuentas y Control de Acceso (ADR-01, ADR-02, ADR-06)
-1. **Registro público deshabilitado:** El único Coordinador Provincial existe precargado vía `seed.sql` (**S-01**).
-2. **Creación delegada en servidor:** Al crear un Coordinador de Recinto o un Veedor (**RF-01**, **RF-20**), la app invoca la Edge Function `create-managed-user`. Esto evita que se cierre la sesión del coordinador y dispara el correo de verificación por **SMTP personalizado** (**RF-03**, **ADR-02**).
-3. **Guardia de navegación (`app/_layout.tsx`):** Evalúa tres variables en orden estricto (**ADR-06**):
-   - Sin sesión activa o correo sin verificar → `/(auth)/login`
-   - Sesión activa con `must_change_password === true` → `/(auth)/primer-ingreso` (**RF-02**)
-   - Sesión válida y clave definitiva → redirección al grupo de rutas del rol (`provincial`, `recinto` o `veedor`).
-4. **Recuperación autónoma:** Solo disponible para correos previamente verificados, mediante enlace de un solo uso con expiración que abre la app vía *deep link* (`controlelectoral://`) (**RF-04**, **ADR-02**).
+### 5.1 Autenticación Jerárquica, Verificación SMTP y Guardia de Rutas (ADR-01, ADR-02, ADR-06)
+- **Raíz precargada (S-01):** El único Coordinador Provincial se precarga mediante `seed.sql` con correo verificado y rol `PROVINCIAL`. El registro público permanece deshabilitado en Supabase Auth.
+- **Creación por terceros en servidor (RF-01, RF-20):** El Coordinador Provincial crea Coordinadores de Recinto y estos crean Veedores (incluidos veedores sustitutos externos) invocando la Edge Function `create-managed-user`. Al ejecutarse en el servidor con privilegios administrativos, **no se interrumpe la sesión del coordinador** y se dispara automáticamente el correo de verificación a través del **SMTP personalizado** (cuyas credenciales residen únicamente en Supabase, **RNF-02**).
+- **Verificación y recuperación (RF-03, RF-04):** El titular confirma su correo mediante enlace único con expiración antes de poder ingresar. La recuperación de contraseña solo se habilita para correos previamente verificados y redirige a la app usando el esquema de *deep link* configurado de forma idéntica en desarrollo y en el APK (`controlelectoral://`).
+- **Redirección inicial en `app/_layout.tsx` (ADR-06):** Evalúa secuencialmente:
+  1. `¿Existe sesión válida con correo verificado?` → Si no, redirige a `/(auth)/login`.
+  2. `¿must_change_password === true en metadatos/perfil?` → Si sí, obliga a pasar por `/(auth)/primer-ingreso` (**RF-02**).
+  3. `¿Rol activo?` → Redirige al grupo exclusivo `/(provincial)`, `/(recinto)` o `/(veedor)`.
 
-### 5.2 Persistencia Offline-First, Sincronización Idempotente y Conflictos (ADR-03, ADR-10, S-04)
-
-Toda operación de registro o edición de actas escribe **primero en SQLite** dentro de una transacción junto con la cola `sync_outbox` y un `client_uuid` único. El archivo fotográfico se almacena localmente tras validar espacio disponible en disco y no se elimina hasta confirmar recepción en el servidor (**ADR-03**).
+### 5.2 Persistencia Offline-First, Sincronización Automática y Conflictos (ADR-03, ADR-10, S-04)
+- **Fuente de verdad local:** Toda creación o edición de acta se persiste en una transacción de `expo-sqlite` (`local_actas` + `sync_outbox`) con un `client_uuid` único y su número de versión (`base_version`), sobreviviendo a cierres y reinicios del dispositivo (**RNF-04**).
+- **Gestión segura de fotografías locales:** `fileSystemPhotoAdapter.ts` verifica previamente el espacio disponible en el dispositivo antes de escribir la imagen en almacenamiento local (**consecuencia ADR-03**). Ni la foto ni el registro local se eliminan hasta recibir confirmación del servidor.
+- **Motor NetInfo con bloqueo de concurrencia (ADR-10):** `netInfoSyncManager.ts` escucha cambios de conectividad. Al recuperar señal, adquiere un *mutex* (`isSyncing`) para evitar que dos eventos simultáneos procesen el mismo elemento de la cola, recorre `sync_outbox` en orden FIFO y actualiza el estado visible en tiempo real (`guardado` → `en proceso` → `sincronizado` / `fallado` / `conflicto`, **RF-14**).
+- **Idempotencia y resolución de conflictos (RNF-04, S-04):** La función RPC en PostgreSQL valida `client_uuid` (evitando duplicados en reintentos) y compara `base_version` contra la versión actual en servidor. Si otro dispositivo modificó la misma acta antes de sincronizarse, el servidor conserva ambas versiones en `acta_conflictos` y notifica al Coordinador de Recinto para que decida cuál prevalece.
 
 ```mermaid
 sequenceDiagram
     actor Veedor
     participant UI as Formulario (RHF + Zod)
+    participant UC as UseCase (Domain)
     participant Local as SQLite + Outbox + FileSystem
-    participant Sync as NetInfo Sync Engine (Mutex)
-    participant Server as Supabase (Storage + RPC)
+    participant Net as NetInfo Sync Manager (Mutex)
+    participant Supa as Supabase (Storage + RPC)
     actor Coord as Coord. Recinto
 
-    Veedor->>UI: Registra/Edita acta + foto + GPS
-    UI->>UI: Valida suma matemática (S-03) y nitidez (ADR-04)
-    UI->>Local: Transacción: guarda acta + encola outbox (client_uuid, base_version)
-    Local-->>Veedor: Estado "GUARDADO LOCAL" (persiste tras reinicio)
+    Veedor->>UI: Ingresa votos + captura foto en vivo + GPS
+    UI->>UC: Valida esquema Zod (S-03), nitidez (ADR-04) y GPS (S-06)
+    UC->>Local: Verifica espacio libre + guarda foto + transacción SQLite/Outbox
+    Local-->>Veedor: Estado "GUARDADO" (persiste tras reinicio)
 
-    Note over Sync: NetInfo detecta reconexión (Lock anti-duplicados)
-    Sync->>Local: Toma pendiente FIFO -> Estado "EN PROCESO"
-    Sync->>Server: 1. Sube foto a bucket privado
-    Sync->>Server: 2. Llama RPC upsert_acta(client_uuid, base_version)
+    Note over Net: NetInfo detecta red activa (adquiere lock de concurrencia)
+    Net->>Local: Lee siguiente pendiente FIFO -> Estado "EN PROCESO"
+    Net->>Supa: 1. Sube foto a bucket privado
+    Net->>Supa: 2. Ejecuta RPC idempotente (client_uuid, base_version)
 
-    alt client_uuid ya existe (reintento)
-        Server-->>Sync: 200 OK (Idempotente, sin duplicar)
+    alt client_uuid ya registrado (reintento)
+        Supa-->>Net: OK sin duplicar (RNF-04)
     else base_version coincide
-        Server-->>Sync: 200 OK (version + 1, guarda historial)
-        Sync->>Local: Marca "SINCRONIZADO" y limpia outbox
-    else Conflicto de versión (editado en otro dispositivo - S-04)
-        Server->>Server: Conserva ambas versiones en acta_conflictos
-        Server-->>Sync: Estado "CONFLICTO"
-        Server-->>Coord: Notifica vía Realtime para decidir versión ganadora
-    else Error de red / servidor
-        Sync->>Local: Marca "FALLADO" + reporta error no fatal a Sentry
+        Supa-->>Net: OK (incrementa version + registra acta_historial)
+        Net->>Local: Marca "SINCRONIZADO" y limpia outbox
+    else Versión desactualizada (edición concurrente - S-04)
+        Supa->>Supa: Conserva ambas versiones en acta_conflictos
+        Supa-->>Net: Estado "CONFLICTO"
+        Supa-->>Coord: Notifica vía Realtime para resolución
+    else Error de subida o red
+        Net->>Local: Marca "FALLADO" + reporta error no fatal a Sentry (ADR-05)
     end
 ```
 
-### 5.3 Validación de Actas, Evidencia Fotográfica y Geolocalización (ADR-04, ADR-08, ADR-09)
-- **Bloqueo matemático estricto (RF-10, RF-19, S-03):** El esquema Zod en `src/domain/validators/` impide guardar si existen valores negativos, si un partido supera el total de sufragantes o si `(votos_partidos + blancos + nulos) !== total_sufragantes`.
-- **Cámara en vivo y nitidez (RF-11, ADR-04):** Se captura únicamente con `expo-camera` (sin selector de galería). Antes de confirmar, se calcula la nitidez de la imagen; si está borrosa o ilegible se advierte y bloquea el avance hasta recapturar. El usuario siempre visualiza la vista previa antes de confirmar.
-- **Geolocalización de mejor precisión (RF-12, S-06):** Al capturar la foto, `expo-location` toma múltiples lecturas y conserva la de menor error en metros. Las coordenadas GPS son obligatorias para guardar, pero no se aplica bloqueo por geocerca estricta; en la auditoría del coordinador se calcula la distancia con **Haversine** respecto al recinto y se muestra una **alerta visual si supera los 300 metros**.
+### 5.3 Validación Matemática, Captura en Vivo y Geolocalización (ADR-04, ADR-08, ADR-09, S-03, S-06)
+- **Bloqueo estricto de inconsistencias (RF-10, RF-19, S-03):** `src/domain/validators/actaSchema.ts` bloquea cualquier intento de guardado o edición si existen números negativos, si los votos de alguna de las 5 organizaciones superan `total_sufragantes` o si `suma(votos_organizaciones) + blancos + nulos !== total_sufragantes`.
+- **Fotografía en vivo con validación de nitidez (RF-11, ADR-04):** La cámara funciona exclusivamente mediante `expo-camera` (sin selector de galería). Tras el disparo, `sharpnessAnalyzer.ts` evalúa la nitidez de la imagen; si resulta borrosa o ilegible muestra una advertencia clara y bloquea la continuación. Cuando pasa el umbral, el veedor revisa la vista previa antes de confirmar el registro.
+- **Geolocalización de máxima precisión (RF-12, S-06):** Al momento de la captura, `gpsLocationAdapter.ts` ejecuta múltiples lecturas con `expo-location` y conserva la coordenada de menor margen de error (`accuracy`). Sin permiso o GPS activo no se permite guardar; sin embargo, no se aplica bloqueo por geocerca estricta. Al auditar el acta, `geoDistance.ts` (Haversine) calcula la distancia al recinto y muestra en el mapa una **alerta visual si supera los 300 metros**.
 
 ### 5.4 Manejo de Estado y Exit Poll en Tiempo Real (ADR-07, RF-15, S-02)
-- **Zustand** administra exclusivamente estado síncrono y de cliente: sesión activa, rol, estado de red (`isOnline`), progreso de sincronización (`isSyncing`, pendientes) y estado del overlay de retroalimentación visual.
-- **TanStack Query** gestiona datos remotos invocando casos de uso del dominio (`recintos`, `mesas`, `actas`, `exitPoll`).
-- **Supabase Realtime** se encapsula dentro de `src/data/datasources/remote/realtimeDS.ts` y se expone mediante contratos de repositorio para no romper Clean Architecture. Al recibir un `INSERT`/`UPDATE` en `actas` o `mesas`, invalida selectivamente las queries del conteo rápido y del avance por recinto (considerando una mesa **completa** únicamente al recibir Alcaldía y Prefectura, o **parcial** con una sola, según **S-02**). Las suscripciones se cierran obligatoriamente al cerrar sesión.
+- **Zustand (`src/presentation/store/`):** Gestiona estado síncrono de sesión, perfil/rol, conectividad (`isOnline`), progreso de la cola offline (`isSyncing`, `pendingCount`) y el estado del `FeedbackOverlay`.
+- **TanStack Query (`src/presentation/hooks/`):** Gestiona consultas y mutaciones remotas conectadas a los casos de uso de `src/domain/`, controlando estados de carga, caché y error sin re-renders innecesarios.
+- **Supabase Realtime encapsulado:** `realtimeDS.ts` y `EscrutinioRepositoryImpl.ts` exponen una suscripción abstracta al dominio. Cada nueva acta o modificación recibida invalida selectivamente las queries de conteo acumulado (Alcaldía y Prefectura, por recinto y total) y avance de mesas (**completa** = Alcaldía + Prefectura recibidas; **parcial** = solo una recibida, **S-02**). Las suscripciones se destruyen automáticamente al cerrar sesión.
 
 ---
 
 ## 6. Seguridad, Confidencialidad y Monitoreo
 
-### 6.1 Aislamiento de Datos por Rol (RF-18, RNF-02, S-05)
-El control de acceso se aplica en **doble capa**: navegación en la app (**ADR-06**) y **Row Level Security (RLS)** en PostgreSQL (**ADR-01**):
-- **Veedor:** Lectura/escritura únicamente sobre mesas donde `veedor_id = auth.uid()` y sus actas. Al ser reemplazado por el coordinador de recinto (**RF-20**, **S-05**), el cambio de `veedor_id` revoca su acceso al instante en RLS, mientras las actas ya registradas permanecen intactas en `actas` y `acta_historial`.
-- **Coordinador de Recinto:** Acceso total exclusivamente a mesas, veedores, actas y conflictos de su `recinto_id` (restricción `UNIQUE` en `recintos.coordinador_id` garantiza un solo coordinador por recinto, **RF-07**).
-- **Coordinador Provincial:** Acceso de lectura a toda su jurisdicción, gestión de recintos y creación de coordinadores de recinto.
+### 6.1 Aislamiento por Rol y Revocación Inmediata (RF-07, RF-18, RNF-02, S-05)
+El aislamiento opera tanto en navegación (**ADR-06**) como en base de datos mediante **Row Level Security (RLS)** (**ADR-01**):
+- **Veedor:** Acceso exclusivo a sus mesas asignadas (`mesas.veedor_id = auth.uid()`) y a sus actas. Cuando el Coordinador de Recinto reasigna una mesa por ausencia (**RF-20**), el cambio de `veedor_id` revoca instantáneamente el acceso del veedor anterior en RLS, conservando las actas ya registradas y su trazabilidad en `acta_historial` (**S-05**).
+- **Coordinador de Recinto:** Acceso exclusivo a mesas, veedores, actas y conflictos de su recinto (`UNIQUE` en `recintos.coordinador_id` garantiza un único coordinador por recinto, **RF-07**).
+- **Coordinador Provincial:** Acceso a recintos, avance, mapa de evidencias y conteo rápido de toda su jurisdicción, además de alta de nuevos recintos y coordinadores de recinto.
 
-### 6.2 Protección de Credenciales y Telemetría de Errores (RF-17, RNF-02, RNF-03, ADR-05)
-- Los tokens de sesión se almacenan cifrados mediante `expo-secure-store`.
-- Las credenciales SMTP y llaves administrativas (`service_role_key`) viven exclusivamente en el backend de Supabase.
-- **Sentry** captura automáticamente cierres nativos (en Development Build / APK), excepciones de JavaScript, errores no fatales (ej. fallo de subida de foto o sincronización), breadcrumbs de pantallas, modelo de dispositivo y versión de Android, almacenando eventos en caché cuando no hay internet.
-- Un interceptor `beforeSend` en `sentryService.ts` elimina **PII** (cédulas de 10 dígitos, nombres, teléfonos y correos) antes de que cualquier reporte salga del dispositivo (**ADR-05**).
-
----
-
-## 7. Lineamientos de Diseño e Interfaz (RNF-06, RNF-07)
-
-- **Identidad visual:** Sistema de tokens en `src/presentation/theme/` basado en los colores de la organización política elegida, aplicado de forma consistente en encabezados, tarjetas, gráficos del Exit Poll y distintivos de dignidad.
-- **Retroalimentación visual sin modales genéricos:** Queda prohibido el uso de `Alert.alert` nativos. Todos los estados (`en proceso`, `guardado`, `sincronizado`, `fallado`, `conflicto` y validaciones) utilizan un sistema unificado de overlays, banners y bottom sheets animados con **Lottie** y **React Native Reanimated**.
-- **UX accesible (RNF-07):** Áreas táctiles amplias (mínimo `52px`), tipografía legible de alto contraste, teclado numérico dedicado en transcripción de actas, confirmación visual previa al envío y protección contra doble pulsación en botones de guardado.
+### 6.2 Protección de Datos y Observabilidad con Sentry (RF-17, RNF-02, RNF-03, ADR-05)
+- Los tokens de autenticación se cifran en dispositivo mediante `expo-secure-store`.
+- Las evidencias fotográficas se almacenan en un bucket privado de Supabase Storage con acceso por URLs firmadas.
+- **Sentry (`sentryAdapter.ts`)** captura cierres nativos (en Development Build / APK), excepciones de JavaScript y errores no fatales (como fallos de subida de foto o sincronización), registrando modelo de dispositivo, versión de Android, versión de la app y breadcrumbs de pantallas, con buffer automático sin conexión.
+- El hook `beforeSend` sanitiza todos los eventos salientes eliminando cualquier dato sensible (**cédulas, nombres, teléfonos y correos electrónicos**) antes de su transmisión (**ADR-05**, **RNF-02**).
 
 ---
 
-## 8. Estrategia de Empaquetado y Entrega (RNF-01)
+## 7. Lineamientos de Diseño Visual y Accesibilidad (RNF-06, RNF-07)
 
-- Compilación nativa mediante **EAS Build** (`eas.json`, perfil `preview` con `buildType: "apk"`) para obtener el archivo `.apk` instalable en dispositivos Android físicos.
-- El *scheme* de *deep linking* (`controlelectoral://`) se configura de forma idéntica en `app.json` y en Supabase Redirect URLs para garantizar que los enlaces de confirmación y recuperación funcionen tanto en pruebas como en el APK final (**ADR-02**).
-- Las pruebas de captura de cierres nativos de **Sentry** (**ADR-05**) y de persistencia tras reinicio en **SQLite** (**ADR-03**) se validan directamente sobre el APK instalado.
+- **Identidad de la organización política:** Todos los colores, superficies, encabezados, badges de dignidad y gráficos del Exit Poll se centralizan en `src/presentation/theme/` respetando la paleta de la organización política seleccionada.
+- **Retroalimentación visual sin modales genéricos:** Se prohíbe el uso de `Alert.alert` nativos. Los estados `en proceso`, `guardado`, `sincronizado`, `fallado`, `conflicto` y las validaciones de formularios utilizan componentes personalizados con **Lottie** y **React Native Reanimated** (`FeedbackOverlay`, `ConfirmSheet` y banners de estado de conectividad).
+- **Experiencia tolerante a errores (RNF-07):** Botones con altura mínima táctil de `52px`, tipografía de alto contraste, teclado numérico dedicado para ingreso de votos, indicador visual en tiempo real del cuadre de sufragantes y bloqueo de botones durante el procesamiento para impedir envíos duplicados (**ADR-08**).
+
+---
+
+## 8. Estrategia de Compilación y Verificación (RNF-01)
+
+- **Empaquetado Android:** Generación del binario `.apk` mediante **EAS Build** (`eas.json`, perfil `preview` con `buildType: "apk"`).
+- **Paridad de Deep Links:** El esquema URL registrado en `app.json` coincide con las *Redirect URLs* de Supabase Auth para garantizar la verificación de correo y recuperación de clave en el APK instalado (**ADR-02**).
+- **Pruebas en dispositivo físico:** Validación obligatoria en el APK instalado de: captura de cierres nativos y errores no fatales en Sentry (**ADR-05**), persistencia de SQLite tras cierre/reinicio y sincronización automática al desactivar Modo Avión (**ADR-03**, **ADR-10**), calibración del umbral de nitidez con actas reales (**ADR-04**) y actualización en vivo del Exit Poll (**ADR-07**).
