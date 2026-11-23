@@ -147,37 +147,37 @@ serve(async (req) => {
 
     // 5. Crear la cuenta sin confirmar y enviar el enlace único de confirmación (ADR-01, ADR-02)
     const tempPassword = generarClaveTemporal();
-    const { data: created, error: createErr } = await admin.auth.admin.createUser({
-      email,
-      password: tempPassword,
-      email_confirm: false,
-      user_metadata: {
-        must_change_password: true,
+    const { data: invited, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
+      redirectTo:
+        'https://milka-borja.github.io/Control-Electoral-App/auth-callback.html?flow=verificado',
+      data: {
         rol: rolDestino,
+        must_change_password: true,
         nombres,
         apellidos,
       },
     });
 
-    if (createErr || !created?.user) {
-      return jsonResponse({ error: createErr?.message ?? 'No se pudo crear la cuenta' }, 400);
+    if (inviteErr || !invited?.user) {
+      return jsonResponse({ error: inviteErr?.message ?? 'No se pudo crear la cuenta' }, 400);
     }
 
-    const newUserId = created.user.id;
-    const { error: confirmationErr } = await admin.auth.admin.resend({
-      type: 'signup',
-      email,
-      options: {
-        emailRedirectTo:
-          'https://milka-borja.github.io/Control-Electoral-App/auth-callback.html?flow=verificado',
+    const newUserId = invited.user.id;
+    const { error: updateErr } = await admin.auth.admin.updateUserById(newUserId, {
+      password: tempPassword,
+      user_metadata: {
+        rol: rolDestino,
+        must_change_password: true,
+        nombres,
+        apellidos,
       },
     });
 
-    if (confirmationErr) {
+    if (updateErr) {
       await admin.auth.admin.deleteUser(newUserId);
       return jsonResponse(
-        { error: confirmationErr.message || 'No se pudo enviar el enlace de confirmación' },
-        500
+        { error: updateErr.message || 'No se pudo asignar la contraseña temporal' },
+        400
       );
     }
 
