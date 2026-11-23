@@ -139,7 +139,7 @@ export function RecintoVeedoresScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.colors.background },
-  scroll: { padding: theme.spacing.md, gap: 12, paddingBottom: 32 },
+  scroll: { paddingHorizontal: 16, paddingTop: 14, gap: 12, paddingBottom: 32 },
   card: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,

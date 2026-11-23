@@ -71,13 +71,20 @@ function RootNavigatorGuard() {
     void bootstrap();
 
     const linkSub = Linking.addEventListener('url', async ({ url }) => {
-      const linkType = await container.authRepository.handleDeepLinkUrl(url);
-      if (linkType === 'RECOVERY') {
-        setRecoveryFlow(true);
-        router.replace('/(auth)/nueva-clave');
-      } else if (linkType === 'VERIFIED') {
-        const refreshed = await container.authRepository.getCurrentSessionUser();
-        setUser(refreshed);
+      try {
+        const linkType = await container.authRepository.handleDeepLinkUrl(url);
+        if (linkType === 'RECOVERY') {
+          setRecoveryFlow(true);
+          router.replace('/(auth)/nueva-clave');
+        } else if (linkType === 'VERIFIED') {
+          const refreshed = await container.authRepository.getCurrentSessionUser();
+          setUser(refreshed);
+        }
+      } catch (err) {
+        container.crashMonitor.captureNonFatal(err, {
+          screen: 'RootLayout',
+          action: 'handleDeepLink',
+        });
       }
     });
 

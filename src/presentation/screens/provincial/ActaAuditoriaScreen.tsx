@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.colors.background },
   centerBox: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { fontSize: 15, color: theme.colors.textSecondary },
-  scroll: { padding: theme.spacing.md, gap: 14, paddingBottom: 36 },
+  scroll: { paddingHorizontal: 16, paddingTop: 14, gap: 12, paddingBottom: 36 },
   readOnlyBanner: {
     flexDirection: 'row',
     alignItems: 'center',

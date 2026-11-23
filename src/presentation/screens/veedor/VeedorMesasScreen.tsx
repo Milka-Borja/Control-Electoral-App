@@ -169,7 +169,7 @@ export function VeedorMesasScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.colors.background },
-  list: { padding: theme.spacing.md, paddingBottom: 32 },
+  list: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 32 },
   syncHeaderBtn: {
     width: 44,
     height: 44,
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md,
     borderLeftWidth: 4,
     borderLeftColor: theme.colors.secondary,
-    marginBottom: 14,
+    marginBottom: 12,
     elevation: 2,
   },
   summaryTitle: { fontSize: 15, fontWeight: '800', color: theme.colors.text },
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
     padding: 16,
-    marginBottom: 14,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: theme.colors.border,
     elevation: 2,
@@ -245,7 +245,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  dignidadLabel: { fontSize: 15, fontWeight: '600', color: theme.colors.text },
+  dignidadLabel: {
+    flex: 1,
+    minWidth: 0,
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.text,
+  },
   cardFooter: {
     flexDirection: 'row',
     justifyContent: 'flex-end',

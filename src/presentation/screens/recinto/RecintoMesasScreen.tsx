@@ -330,7 +330,7 @@ export function RecintoMesasScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.colors.background },
-  list: { padding: theme.spacing.md, gap: 12 },
+  list: { paddingHorizontal: 16, paddingTop: 14, gap: 12, paddingBottom: 16 },
   card: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: { fontSize: 18, fontWeight: '800', color: theme.colors.text },
   closeBtn: { padding: 6 },
-  tabRow: { flexDirection: 'row', gap: 10, marginBottom: 14 },
+  tabRow: { flexDirection: 'row', gap: 10, marginBottom: 12 },
   tabBtn: {
     flex: 1,
     minHeight: 46,

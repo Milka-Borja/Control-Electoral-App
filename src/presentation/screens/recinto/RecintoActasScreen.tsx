@@ -83,7 +83,7 @@ export function RecintoActasScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.colors.background },
-  list: { padding: theme.spacing.md, gap: 12 },
+  list: { paddingHorizontal: 16, paddingTop: 14, gap: 12, paddingBottom: 16 },
   card: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,

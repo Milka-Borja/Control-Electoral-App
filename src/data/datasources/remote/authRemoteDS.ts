@@ -1,9 +1,11 @@
-import * as Linking from 'expo-linking';
 import { CreateManagedUserResult } from '../../../domain/repositories';
 import { Usuario } from '../../../domain/entities';
 import { CreateUserInput } from '../../../domain/validators/userSchema';
 import { supabaseClient } from '../../../infrastructure/supabase/supabaseClient';
 import { mapUsuarioRow, UsuarioRow } from '../../mappers/mappers';
+
+const AUTH_CALLBACK_URL =
+  'https://milka-borja.github.io/Control-Electoral-App/auth-callback.html';
 
 function extractAuthParamsFromUrl(url: string): Record<string, string> {
   const params: Record<string, string> = {};
@@ -94,6 +96,16 @@ export class AuthRemoteDS {
   }
 
   async updatePassword(newPassword: string, isFirstLogin: boolean): Promise<void> {
+    const { data: sessionData, error: sessionErr } = await supabaseClient.auth.getSession();
+    if (sessionErr) {
+      throw new Error(`No se pudo validar la sesión activa: ${sessionErr.message}`);
+    }
+    if (!sessionData.session) {
+      throw new Error(
+        'No hay una sesión activa. Inicie sesión o abra un enlace válido de recuperación antes de cambiar la contraseña.'
+      );
+    }
+
     const { error: authErr } = await supabaseClient.auth.updateUser({
       password: newPassword,
       data: { must_change_password: false },
@@ -130,7 +142,7 @@ export class AuthRemoteDS {
     }
 
     const { error } = await supabaseClient.auth.resetPasswordForEmail(cleanEmail, {
-      redirectTo: Linking.createURL('nueva-clave'),
+      redirectTo: `${AUTH_CALLBACK_URL}?flow=nueva-clave`,
     });
 
     if (error) {
@@ -146,7 +158,6 @@ export class AuthRemoteDS {
         apellidos: input.apellidos,
         telefono: input.telefono,
         email: input.email,
-        redirectTo: Linking.createURL('primer-ingreso'),
         rol: input.rol,
         es_externo: Boolean(input.esExterno),
         recinto_id: input.recintoId ?? null,
@@ -184,16 +195,31 @@ export class AuthRemoteDS {
 
     if (params.code) {
       const { error } = await supabaseClient.auth.exchangeCodeForSession(params.code);
-      if (error) return 'NONE';
+      if (error) {
+        throw new Error(`No se pudo validar el enlace de autenticación: ${error.message}`);
+      }
       return url.includes('nueva-clave') ? 'RECOVERY' : 'VERIFIED';
     }
 
     if (params.access_token && params.refresh_token) {
-      const { error } = await supabaseClient.auth.setSession({
-        access_token: params.access_token,
-        refresh_token: params.refresh_token,
-      });
-      if (error) return 'NONE';
+      const { data: sessionData, error: sessionErr } = await supabaseClient.auth.getSession();
+      if (sessionErr) {
+        throw new Error(`No se pudo validar la sesión recibida: ${sessionErr.message}`);
+      }
+
+      const session = sessionData.session;
+      if (
+        session?.access_token !== params.access_token ||
+        session.refresh_token !== params.refresh_token
+      ) {
+        const { error } = await supabaseClient.auth.setSession({
+          access_token: params.access_token,
+          refresh_token: params.refresh_token,
+        });
+        if (error) {
+          throw new Error(`No se pudo iniciar la sesión del enlace: ${error.message}`);
+        }
+      }
 
       if (params.type === 'recovery' || url.includes('nueva-clave')) {
         return 'RECOVERY';

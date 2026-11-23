@@ -136,7 +136,7 @@ export function MesaDetalleScreen({
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.colors.background },
-  content: { padding: theme.spacing.md, gap: 16 },
+  content: { paddingHorizontal: 16, paddingTop: 14, gap: 12, paddingBottom: 16 },
   infoBanner: {
     backgroundColor: theme.colors.accentSoft,
     borderLeftWidth: 4,

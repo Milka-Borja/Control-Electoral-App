@@ -73,12 +73,6 @@ serve(async (req) => {
     }
 
     const payload = await req.json();
-    const redirectTo = payload.redirectTo === undefined
-      ? 'controlelectoral://primer-ingreso'
-      : String(payload.redirectTo);
-    if (!redirectTo.startsWith('controlelectoral://') && !redirectTo.startsWith('exp://')) {
-      return jsonResponse({ error: 'Esquema de redirección no permitido' }, 400);
-    }
     const cedula = String(payload.cedula ?? '').trim();
     const nombres = String(payload.nombres ?? '').trim();
     const apellidos = String(payload.apellidos ?? '').trim();
@@ -151,38 +145,40 @@ serve(async (req) => {
       }
     }
 
-    // 5. Crear en Auth enviando enlace único de confirmación por SMTP (ADR-01, ADR-02)
+    // 5. Crear la cuenta sin confirmar y enviar el enlace único de confirmación (ADR-01, ADR-02)
     const tempPassword = generarClaveTemporal();
-    const { data: invited, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
-      redirectTo,
-      data: {
-        rol: rolDestino,
+    const { data: created, error: createErr } = await admin.auth.admin.createUser({
+      email,
+      password: tempPassword,
+      email_confirm: false,
+      user_metadata: {
         must_change_password: true,
+        rol: rolDestino,
         nombres,
         apellidos,
       },
     });
 
-    if (inviteErr || !invited?.user) {
-      return jsonResponse({ error: inviteErr?.message ?? 'No se pudo enviar la invitación por correo' }, 400);
+    if (createErr || !created?.user) {
+      return jsonResponse({ error: createErr?.message ?? 'No se pudo crear la cuenta' }, 400);
     }
 
-    const newUserId = invited.user.id;
-
-    // Establecer clave temporal SIN confirmar el correo (el usuario debe confirmar su enlace primero)
-    const { error: pwdErr } = await admin.auth.admin.updateUserById(newUserId, {
-      password: tempPassword,
-      user_metadata: {
-        rol: rolDestino,
-        must_change_password: true,
-        nombres,
-        apellidos,
+    const newUserId = created.user.id;
+    const { error: confirmationErr } = await admin.auth.admin.resend({
+      type: 'signup',
+      email,
+      options: {
+        emailRedirectTo:
+          'https://milka-borja.github.io/Control-Electoral-App/auth-callback.html?flow=verificado',
       },
     });
 
-    if (pwdErr) {
+    if (confirmationErr) {
       await admin.auth.admin.deleteUser(newUserId);
-      return jsonResponse({ error: 'Error configurando la clave temporal' }, 500);
+      return jsonResponse(
+        { error: confirmationErr.message || 'No se pudo enviar el enlace de confirmación' },
+        500
+      );
     }
 
     // 6. Insertar perfil en public.usuarios

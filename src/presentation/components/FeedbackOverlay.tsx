@@ -75,12 +75,14 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
   },
   card: {
-    width: '100%',
-    maxWidth: 360,
+    width: '85%',
+    maxWidth: 340,
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
-    padding: theme.spacing.lg,
+    paddingVertical: 24,
+    paddingHorizontal: 24,
     alignItems: 'center',
+    justifyContent: 'center',
     overflow: 'hidden',
     elevation: 10,
   },
@@ -92,8 +94,8 @@ const styles = StyleSheet.create({
     height: 6,
   },
   lottie: {
-    width: 112,
-    height: 112,
+    width: 88,
+    height: 88,
     marginTop: 6,
   },
   title: {

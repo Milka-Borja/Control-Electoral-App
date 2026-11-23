@@ -130,12 +130,15 @@ export function ProvincialExitPollScreen() {
               color={dignidad === 'ALCALDIA' ? theme.colors.white : theme.colors.primary}
             />
             <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.78}
               style={[
                 styles.toggleText,
                 dignidad === 'ALCALDIA' && styles.toggleTextActive,
               ]}
             >
-              Alcaldía Quito
+              Alcaldía de Quito
             </Text>
           </Pressable>
 
@@ -153,12 +156,15 @@ export function ProvincialExitPollScreen() {
               }
             />
             <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.78}
               style={[
                 styles.toggleText,
                 dignidad === 'PREFECTURA' && styles.toggleTextActive,
               ]}
             >
-              Prefectura Pichincha
+              Prefectura de Pichincha
             </Text>
           </Pressable>
         </View>
@@ -309,7 +315,7 @@ export function ProvincialExitPollScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.colors.background },
-  scroll: { padding: theme.spacing.md, gap: 12, paddingBottom: 36 },
+  scroll: { paddingHorizontal: 16, paddingTop: 14, gap: 12, paddingBottom: 36 },
   quickNavRow: { flexDirection: 'row', gap: 10 },
   quickBtn: {
     flex: 1,
@@ -324,10 +330,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   quickBtnText: { fontSize: 15, fontWeight: '800', color: theme.colors.text },
-  toggleRow: { flexDirection: 'row', gap: 10 },
+  toggleRow: { flexDirection: 'row', gap: 8 },
   toggleBtn: {
     flex: 1,
+    minWidth: 0,
     minHeight: 50,
+    paddingHorizontal: 8,
     borderRadius: theme.radius.md,
     backgroundColor: theme.colors.surface,
     borderWidth: 1.5,
@@ -338,7 +346,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   toggleBtnActive: { backgroundColor: theme.colors.primary },
-  toggleText: { fontSize: 15, fontWeight: '800', color: theme.colors.primary },
+  toggleText: {
+    flex: 1,
+    minWidth: 0,
+    fontSize: 14,
+    fontWeight: '800',
+    color: theme.colors.primary,
+    textAlign: 'center',
+  },
   toggleTextActive: { color: theme.colors.white },
   chipsRow: { gap: 8, paddingVertical: 2 },
   chip: {

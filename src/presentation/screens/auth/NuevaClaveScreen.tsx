@@ -1,7 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import { ShieldCheck } from 'lucide-react-native';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
@@ -18,6 +19,52 @@ export function NuevaClaveScreen() {
   const router = useRouter();
   const { setUser, setRecoveryFlow } = useAuthStore();
   const { showLoading, hideFeedback, showSuccess, showError } = useFeedbackStore();
+  const isRecoveryFlow = useAuthStore((s) => s.isRecoveryFlow);
+  const [isRecoverySessionReady, setIsRecoverySessionReady] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const processRecoveryUrl = async (url: string | null) => {
+      const linkType = url
+        ? await container.authRepository.handleDeepLinkUrl(url)
+        : 'NONE';
+      if (linkType === 'RECOVERY') {
+        setRecoveryFlow(true);
+      }
+
+      const recoveryActive = linkType === 'RECOVERY' || isRecoveryFlow;
+      const currentUser = recoveryActive
+        ? await container.authRepository.getCurrentSessionUser()
+        : null;
+      if (mounted) {
+        setIsRecoverySessionReady(Boolean(currentUser));
+      }
+    };
+
+    const handleError = (err: unknown) => {
+      if (!mounted) return;
+      setIsRecoverySessionReady(false);
+      showError(
+        'Enlace inválido o expirado',
+        err instanceof Error ? err.message : 'Solicite un nuevo enlace de recuperación'
+      );
+    };
+
+    const initialize = async () => {
+      await processRecoveryUrl(await Linking.getInitialURL());
+    };
+    void initialize().catch(handleError);
+
+    const linkSub = Linking.addEventListener('url', ({ url }) => {
+      void processRecoveryUrl(url).catch(handleError);
+    });
+
+    return () => {
+      mounted = false;
+      linkSub.remove();
+    };
+  }, [isRecoveryFlow, setRecoveryFlow, showError]);
 
   const {
     control,
@@ -29,6 +76,14 @@ export function NuevaClaveScreen() {
   });
 
   const onSubmit = async (values: ChangePasswordInput) => {
+    if (!isRecoverySessionReady) {
+      showError(
+        'Sesión de recuperación no disponible',
+        'Abra un enlace válido de recuperación antes de establecer una nueva contraseña.'
+      );
+      return;
+    }
+
     showLoading('Restableciendo contraseña...', 'Aplicando cambios seguros');
     try {
       await container.changePasswordUseCase.execute(
@@ -64,6 +119,11 @@ export function NuevaClaveScreen() {
         <Text style={styles.desc}>
           Ingrese su nueva contraseña definitiva para recuperar el acceso a su cuenta.
         </Text>
+        {!isRecoverySessionReady ? (
+          <Text style={styles.sessionHint}>
+            Abra desde este dispositivo el enlace de recuperación enviado a su correo.
+          </Text>
+        ) : null}
 
         <ControlledInput
           control={control}
@@ -83,10 +143,17 @@ export function NuevaClaveScreen() {
 
         <Pressable
           onPress={handleSubmit(onSubmit)}
-          disabled={isSubmitting}
-          style={styles.btn}
+          disabled={isSubmitting || !isRecoverySessionReady}
+          style={[
+            styles.btn,
+            (isSubmitting || !isRecoverySessionReady) && styles.btnDisabled,
+          ]}
         >
-          <Text style={styles.btnText}>Confirmar nueva contraseña</Text>
+          <Text style={styles.btnText}>
+            {isRecoverySessionReady
+              ? 'Confirmar nueva contraseña'
+              : 'Esperando sesión de recuperación'}
+          </Text>
         </Pressable>
       </View>
     </ScrollView>
@@ -109,6 +176,12 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 21, fontWeight: '800', color: theme.colors.text, marginTop: 6 },
   desc: { fontSize: 15, color: theme.colors.textSecondary, lineHeight: 22, marginBottom: 12 },
+  sessionHint: {
+    color: theme.colors.danger,
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 8,
+  },
   btn: {
     minHeight: theme.touch.minButtonHeight,
     backgroundColor: theme.colors.secondary,
@@ -117,5 +190,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 6,
   },
+  btnDisabled: { opacity: 0.6 },
   btnText: { color: theme.colors.white, fontSize: 16, fontWeight: '700' },
 });

@@ -509,7 +509,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   progressFill: { height: '100%', borderRadius: 99 },
-  scroll: { padding: theme.spacing.md, gap: 14, paddingBottom: 38 },
+  scroll: { paddingHorizontal: 16, paddingTop: 14, gap: 12, paddingBottom: 38 },
   sectionCard: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,

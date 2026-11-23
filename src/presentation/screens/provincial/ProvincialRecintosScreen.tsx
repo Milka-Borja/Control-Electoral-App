@@ -287,7 +287,7 @@ export function ProvincialRecintosScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.colors.background },
-  scroll: { padding: theme.spacing.md, gap: 12, paddingBottom: 32 },
+  scroll: { paddingHorizontal: 16, paddingTop: 14, gap: 12, paddingBottom: 32 },
   toggleCreateBtn: {
     minHeight: theme.touch.minButtonHeight,
     backgroundColor: theme.colors.primary,
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 14,
+    marginBottom: 12,
   },
   modalTitle: { flex: 1, fontSize: 17, fontWeight: '800', color: theme.colors.text },
   emptyText: { fontSize: 14, color: theme.colors.textSecondary, textAlign: 'center', padding: 20 },
