@@ -1,42 +1,55 @@
 {
   "expo": {
-    "name": "control-electoral-app",
-    "slug": "control-electoral-app",
+    "name": "Control Electoral",
+    "slug": "control-electoral",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "controlelectoralapp",
-    "userInterfaceStyle": "automatic",
-    "ios": {
-      "supportsTablet": true
-    },
+    "scheme": "controlelectoral",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
     "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
-      },
-      "predictiveBackGestureEnabled": false
-    },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "package": "com.controlelectoral.app",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "plugins": [
       "expo-router",
+      "expo-sqlite",
+      "expo-secure-store",
       [
-        "expo-splash-screen",
+        "expo-camera",
         {
-          "image": "./assets/images/splash-icon.png",
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "cameraPermission": "La aplicación necesita acceso a la cámara para fotografiar las actas de escrutinio."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "La aplicación necesita tu ubicación GPS para verificar el recinto desde donde se captura cada acta."
+        }
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "organization": "TU_ORG_SENTRY",
+          "project": "TU_PROYECTO_SENTRY"
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0219384a-79c7-4145-95fa-047ea09779ce"
+      }
     }
   }
 }

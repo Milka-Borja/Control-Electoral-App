@@ -1,0 +1,121 @@
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'expo-router';
+import { ShieldCheck } from 'lucide-react-native';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ChangePasswordInput,
+  changePasswordSchema,
+} from '../../../domain/validators/userSchema';
+import { container } from '../../../infrastructure/di/container';
+import { ControlledInput } from '../../components/ControlledInput';
+import { useAuthStore } from '../../store/authStore';
+import { useFeedbackStore } from '../../store/feedbackStore';
+import { theme } from '../../theme/theme';
+
+export function NuevaClaveScreen() {
+  const router = useRouter();
+  const { setUser, setRecoveryFlow } = useAuthStore();
+  const { showLoading, hideFeedback, showSuccess, showError } = useFeedbackStore();
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm<ChangePasswordInput>({
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: { password: '', confirmPassword: '' },
+  });
+
+  const onSubmit = async (values: ChangePasswordInput) => {
+    showLoading('Restableciendo contraseña...', 'Aplicando cambios seguros');
+    try {
+      await container.changePasswordUseCase.execute(
+        values.password,
+        values.confirmPassword,
+        true
+      );
+      const refreshed = await container.authRepository.getCurrentSessionUser();
+      setRecoveryFlow(false);
+      setUser(refreshed);
+      hideFeedback();
+      showSuccess(
+        'Contraseña restablecida',
+        'Su nueva contraseña está activa. Ya puede ingresar al sistema.',
+        () => {
+          if (!refreshed) router.replace('/(auth)/login');
+        }
+      );
+    } catch (err) {
+      hideFeedback();
+      showError(
+        'Enlace inválido o expirado',
+        err instanceof Error ? err.message : 'Solicite un nuevo enlace de recuperación'
+      );
+    }
+  };
+
+  return (
+    <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+      <View style={styles.card}>
+        <ShieldCheck size={38} color={theme.colors.secondary} />
+        <Text style={styles.title}>Establecer nueva contraseña</Text>
+        <Text style={styles.desc}>
+          Ingrese su nueva contraseña definitiva para recuperar el acceso a su cuenta.
+        </Text>
+
+        <ControlledInput
+          control={control}
+          name="password"
+          label="Nueva contraseña"
+          placeholder="Mínimo 8 caracteres, mayúscula y número"
+          secureTextEntry
+        />
+
+        <ControlledInput
+          control={control}
+          name="confirmPassword"
+          label="Confirmar contraseña"
+          placeholder="Repita la contraseña"
+          secureTextEntry
+        />
+
+        <Pressable
+          onPress={handleSubmit(onSubmit)}
+          disabled={isSubmitting}
+          style={styles.btn}
+        >
+          <Text style={styles.btnText}>Confirmar nueva contraseña</Text>
+        </Pressable>
+      </View>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  scroll: {
+    flexGrow: 1,
+    backgroundColor: theme.colors.background,
+    justifyContent: 'center',
+    padding: theme.spacing.lg,
+  },
+  card: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing.lg,
+    gap: 8,
+    elevation: 4,
+  },
+  title: { fontSize: 21, fontWeight: '800', color: theme.colors.text, marginTop: 6 },
+  desc: { fontSize: 15, color: theme.colors.textSecondary, lineHeight: 22, marginBottom: 12 },
+  btn: {
+    minHeight: theme.touch.minButtonHeight,
+    backgroundColor: theme.colors.secondary,
+    borderRadius: theme.radius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  btnText: { color: theme.colors.white, fontSize: 16, fontWeight: '700' },
+});
