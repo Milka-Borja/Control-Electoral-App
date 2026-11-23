@@ -40,7 +40,8 @@
           "organization": "TU_ORG_SENTRY",
           "project": "TU_PROYECTO_SENTRY"
         }
-      ]
+      ],
+      "expo-splash-screen"
     ],
     "experiments": {
       "typedRoutes": true

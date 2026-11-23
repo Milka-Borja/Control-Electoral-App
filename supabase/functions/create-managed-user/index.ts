@@ -148,8 +148,7 @@ serve(async (req) => {
     // 5. Crear la cuenta sin confirmar y enviar el enlace único de confirmación (ADR-01, ADR-02)
     const tempPassword = generarClaveTemporal();
     const { data: invited, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
-      redirectTo:
-        'https://milka-borja.github.io/Control-Electoral-App/auth-callback.html?flow=verificado',
+      redirectTo: 'controlelectoral://login',
       data: {
         rol: rolDestino,
         must_change_password: true,

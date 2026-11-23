@@ -4,9 +4,6 @@ import { CreateUserInput } from '../../../domain/validators/userSchema';
 import { supabaseClient } from '../../../infrastructure/supabase/supabaseClient';
 import { mapUsuarioRow, UsuarioRow } from '../../mappers/mappers';
 
-const AUTH_CALLBACK_URL =
-  'https://milka-borja.github.io/Control-Electoral-App/auth-callback.html';
-
 function extractAuthParamsFromUrl(url: string): Record<string, string> {
   const params: Record<string, string> = {};
   const queryMatch = url.split('?')[1]?.split('#')[0];
@@ -142,7 +139,7 @@ export class AuthRemoteDS {
     }
 
     const { error } = await supabaseClient.auth.resetPasswordForEmail(cleanEmail, {
-      redirectTo: `${AUTH_CALLBACK_URL}?flow=nueva-clave`,
+      redirectTo: 'controlelectoral://nueva-clave',
     });
 
     if (error) {
