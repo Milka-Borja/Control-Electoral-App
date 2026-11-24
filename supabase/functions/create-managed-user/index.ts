@@ -147,7 +147,24 @@ serve(async (req) => {
 
     // 5. Crear la cuenta sin confirmar y enviar el enlace único de confirmación (ADR-01, ADR-02)
     const tempPassword = generarClaveTemporal();
-    const { data: invited, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
+    const { data: created, error: createErr } = await admin.auth.admin.createUser({
+      email,
+      password: tempPassword,
+      email_confirm: false,
+      user_metadata: {
+        rol: rolDestino,
+        must_change_password: true,
+        nombres,
+        apellidos,
+      },
+    });
+
+    if (createErr || !created?.user) {
+      return jsonResponse({ error: createErr?.message ?? 'No se pudo crear la cuenta' }, 400);
+    }
+
+    const newUserId = created.user.id;
+    const { error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
       redirectTo: 'controlelectoral://login',
       data: {
         rol: rolDestino,
@@ -157,27 +174,9 @@ serve(async (req) => {
       },
     });
 
-    if (inviteErr || !invited?.user) {
-      return jsonResponse({ error: inviteErr?.message ?? 'No se pudo crear la cuenta' }, 400);
-    }
-
-    const newUserId = invited.user.id;
-    const { error: updateErr } = await admin.auth.admin.updateUserById(newUserId, {
-      password: tempPassword,
-      user_metadata: {
-        rol: rolDestino,
-        must_change_password: true,
-        nombres,
-        apellidos,
-      },
-    });
-
-    if (updateErr) {
+    if (inviteErr) {
       await admin.auth.admin.deleteUser(newUserId);
-      return jsonResponse(
-        { error: updateErr.message || 'No se pudo asignar la contraseña temporal' },
-        400
-      );
+      return jsonResponse({ error: inviteErr.message }, 400);
     }
 
     // 6. Insertar perfil en public.usuarios

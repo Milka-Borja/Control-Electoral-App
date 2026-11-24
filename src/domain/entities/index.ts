@@ -180,6 +180,7 @@ export interface ResultadoCandidato {
   sigla: string;
   organizacionNombre: string;
   colorHex: string;
+  esCliente: boolean;
   candidatoNombre: string;
   votos: number;
   porcentaje: number;

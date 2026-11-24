@@ -174,6 +174,15 @@ export function RecintoMesasScreen() {
         contentContainerStyle={styles.list}
         refreshing={isRefetching}
         onRefresh={refetch}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>
+              {!data?.recinto
+                ? 'Aún no tienes un recinto electoral asignado. Solicita al Coordinador Provincial que te asigne un recinto (RF-07)'
+                : 'Este recinto aún no tiene mesas (JRV) registradas'}
+            </Text>
+          </View>
+        }
       />
 
       {/* Modal de asignación o creación inmediata de sustituto externo (RF-20) */}
@@ -331,6 +340,19 @@ export function RecintoMesasScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.colors.background },
   list: { paddingHorizontal: 16, paddingTop: 14, gap: 12, paddingBottom: 16 },
+  emptyState: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    padding: 20,
+  },
+  emptyStateText: {
+    fontSize: 14,
+    lineHeight: 21,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+  },
   card: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,

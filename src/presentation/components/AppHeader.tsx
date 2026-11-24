@@ -88,7 +88,9 @@ export function AppHeader({
         <View style={styles.row}>
           {showBack ? (
             <Pressable
-              onPress={() => router.back()}
+              onPress={() => {
+                if (router.canGoBack()) router.back();
+              }}
               style={styles.iconBtn}
               accessibilityLabel="Volver atrás"
             >

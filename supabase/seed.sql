@@ -50,17 +50,25 @@ ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.organizaciones (numero_lista, sigla, nombre, color_hex, es_cliente) VALUES
 
-(10, 'ACP', 'Alianza Cívica Pichincha', '#0D3B66', true),
+(21, 'CREO', 'Movimiento CREO', '#003B7A', true),
 
-(21, 'MPQ', 'Movimiento Progreso Quiteño', '#0F9D58', false),
+(5, 'RC', 'Revolución Ciudadana', '#00AEEF', false),
 
-(33, 'FUP', 'Frente Unido Popular', '#D62828', false),
+(6, 'PSC', 'Partido Social Cristiano', '#D62828', false),
 
-(45, 'RDE', 'Renovación Democrática Ecuatoriana', '#E07A00', false),
+(7, 'ADN', 'Acción Democrática Nacional', '#F58220', false),
 
-(52, 'IVA', 'Iniciativa Verde Andina', '#7B2CBF', false)
+(12, 'ID', 'Izquierda Democrática', '#7B2CBF', false)
 
-ON CONFLICT (numero_lista) DO NOTHING;
+ON CONFLICT (numero_lista) DO UPDATE SET
+
+sigla = EXCLUDED.sigla,
+
+nombre = EXCLUDED.nombre,
+
+color_hex = EXCLUDED.color_hex,
+
+es_cliente = EXCLUDED.es_cliente;
 
 
 
@@ -72,31 +80,33 @@ SELECT o.id, v.dignidad::public.dignidad_electoral, v.nombre
 
 FROM (VALUES
 
-(10, 'ALCALDIA', 'Ing. Carlos Andrés Morales Vega'),
+(21, 'ALCALDIA', 'Luz Elena Coloma Escobar'),
 
-(10, 'PREFECTURA', 'Dra. Valeria Fernanda Paredes Cruz'),
+(21, 'PREFECTURA', 'Andrea Hidalgo Maldonado'),
 
-(21, 'ALCALDIA', 'Arq. Sofía Gabriela Benítez Lara'),
+(5, 'ALCALDIA', 'Christian Pabel Muñoz López'),
 
-(21, 'PREFECTURA', 'Econ. Diego Patricio Herrera Tapia'),
+(5, 'PREFECTURA', 'Paola Verenice Pabón Caranqui'),
 
-(33, 'ALCALDIA', 'Abg. Marco Antonio Salazar Ortiz'),
+(6, 'ALCALDIA', 'César Andrés Páez Benalcázar'),
 
-(33, 'PREFECTURA', 'Lcda. Carmen Lucía Andrade Molina'),
+(6, 'PREFECTURA', 'Eduardo Del Pozo Fierro'),
 
-(45, 'ALCALDIA', 'Mgs. Andrea Carolina Villacís León'),
+(7, 'ALCALDIA', 'Daniel Roy Gilchrist Noboa Azín'),
 
-(45, 'PREFECTURA', 'Ing. Roberto Xavier Cevallos Pino'),
+(7, 'PREFECTURA', 'María José Pinto González Artigas'),
 
-(52, 'ALCALDIA', 'Dr. Esteban Mauricio Ruales Gómez'),
+(12, 'ALCALDIA', 'Inti Gronneberg'),
 
-(52, 'PREFECTURA', 'Biol. Patricia Elena Quintero Ríos')
+(12, 'PREFECTURA', 'Roberto Cuasapaz')
 
 ) AS v(lista, dignidad, nombre)
 
 JOIN public.organizaciones o ON o.numero_lista = v.lista
 
-ON CONFLICT (organizacion_id, dignidad) DO NOTHING;
+ON CONFLICT (organizacion_id, dignidad) DO UPDATE SET
+
+nombre_completo = EXCLUDED.nombre_completo;
 
 
 

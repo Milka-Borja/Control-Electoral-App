@@ -33,7 +33,12 @@ function CandidateBarRow({ item, rank }: { item: ResultadoCandidato; rank: numbe
   }));
 
   return (
-    <View style={styles.candCard}>
+    <View
+      style={[
+        styles.candCard,
+        item.esCliente === true && styles.candCardClient,
+      ]}
+    >
       <View style={styles.candTop}>
         <View style={[styles.listaBadge, { backgroundColor: item.colorHex }]}>
           <Text style={styles.listaText}>L{item.numeroLista}</Text>
@@ -46,6 +51,11 @@ function CandidateBarRow({ item, rank }: { item: ResultadoCandidato; rank: numbe
           <Text style={styles.orgSub} numberOfLines={1}>
             {item.sigla} · {item.organizacionNombre}
           </Text>
+          {item.esCliente === true ? (
+            <Text style={styles.orgClientBadge}>
+              Lista 21 · Nuestra organización
+            </Text>
+          ) : null}
         </View>
         <View style={styles.votesCol}>
           <Text style={styles.pctText}>{item.porcentaje.toFixed(1)}%</Text>
@@ -413,6 +423,11 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
     gap: 8,
   },
+  candCardClient: {
+    borderLeftWidth: 4,
+    borderLeftColor: theme.colors.primary,
+    backgroundColor: theme.colors.accentSoft,
+  },
   candTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   listaBadge: {
     width: 42,
@@ -424,6 +439,17 @@ const styles = StyleSheet.create({
   listaText: { color: theme.colors.white, fontSize: 13, fontWeight: '800' },
   candName: { fontSize: 15, fontWeight: '800', color: theme.colors.text },
   orgSub: { fontSize: 12, color: theme.colors.textSecondary },
+  orgClientBadge: {
+    alignSelf: 'flex-start',
+    marginTop: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 99,
+    backgroundColor: theme.colors.accent,
+    color: theme.colors.primaryDark,
+    fontSize: 10,
+    fontWeight: '800',
+  },
   votesCol: { alignItems: 'flex-end' },
   pctText: { fontSize: 17, fontWeight: '800', color: theme.colors.primary },
   votesText: { fontSize: 12, color: theme.colors.textSecondary },

@@ -373,7 +373,10 @@ export function ActaFormScreen({
               const excede = val > totalSufragantes;
 
               return (
-                <View key={org.id} style={styles.orgRow}>
+                <View
+                  key={org.id}
+                  style={[styles.orgRow, org.esCliente && styles.orgRowClient]}
+                >
                   <View style={[styles.orgStripe, { backgroundColor: org.colorHex }]} />
                   <View style={styles.orgInfo}>
                     <Text style={styles.orgLista}>
@@ -382,6 +385,11 @@ export function ActaFormScreen({
                     <Text style={styles.orgName} numberOfLines={1}>
                       {org.nombre}
                     </Text>
+                    {org.esCliente ? (
+                      <Text style={styles.orgClientBadge}>
+                        Lista 21 · Nuestra organización
+                      </Text>
+                    ) : null}
                     <Text style={styles.candName} numberOfLines={1}>
                       {candName}
                     </Text>
@@ -532,10 +540,26 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.surfaceAlt,
   },
+  orgRowClient: {
+    borderLeftWidth: 4,
+    borderLeftColor: theme.colors.primary,
+    backgroundColor: theme.colors.accentSoft,
+  },
   orgStripe: { width: 8, height: 54, borderRadius: 6 },
   orgInfo: { flex: 1 },
   orgLista: { fontSize: 12, fontWeight: '800', color: theme.colors.textMuted },
   orgName: { fontSize: 15, fontWeight: '700', color: theme.colors.text },
+  orgClientBadge: {
+    alignSelf: 'flex-start',
+    marginTop: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 99,
+    backgroundColor: theme.colors.accent,
+    color: theme.colors.primaryDark,
+    fontSize: 10,
+    fontWeight: '800',
+  },
   candName: { fontSize: 13, color: theme.colors.textSecondary },
   excedeText: { fontSize: 12, fontWeight: '700', color: theme.colors.danger, marginTop: 2 },
   voteInput: {

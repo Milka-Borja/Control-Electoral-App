@@ -2,18 +2,18 @@ import { EstadoSyncActa } from '../../domain/entities';
 
 export const theme = {
   brand: {
-    name: 'Alianza Cívica Pichincha',
-    shortName: 'Lista 10 · ACP',
+    name: 'Movimiento CREO',
+    shortName: 'Lista 21 · CREO',
     jurisdiction: 'Pichincha · Quito',
   },
   colors: {
-    primary: '#0D3B66',
-    primaryDark: '#082644',
-    primaryLight: '#1B5A96',
+    primary: '#003B7A',
+    primaryDark: '#002652',
+    primaryLight: '#1456A0',
     secondary: '#0F9D58',
     secondarySoft: '#E6F7EE',
-    accent: '#E9A825',
-    accentSoft: '#FEF6E4',
+    accent: '#F5C400',
+    accentSoft: '#FEF9C3',
     background: '#F4F7FB',
     surface: '#FFFFFF',
     surfaceAlt: '#EDF2F7',

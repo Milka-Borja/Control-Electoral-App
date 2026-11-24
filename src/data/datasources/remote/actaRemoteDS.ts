@@ -461,6 +461,7 @@ export class ActaRemoteDS {
         sigla: o.sigla,
         organizacionNombre: o.nombre,
         colorHex: o.color_hex,
+        esCliente: Boolean(o.es_cliente),
         candidatoNombre: candPorOrg.get(o.id) ?? 'Candidato',
         votos,
         porcentaje,

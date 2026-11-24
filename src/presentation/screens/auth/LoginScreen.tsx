@@ -59,8 +59,9 @@ export function LoginScreen() {
       >
         <View style={styles.hero}>
           <View style={styles.badge}>
-            <ShieldCheck size={34} color={theme.colors.accent} />
+            <ShieldCheck size={34} color={theme.colors.primaryDark} />
           </View>
+          <Text style={styles.brandTag}>LISTA 21 · PICHINCHA</Text>
           <Text style={styles.brand}>{theme.brand.name}</Text>
           <Text style={styles.subBrand}>Control Electoral · {theme.brand.jurisdiction}</Text>
         </View>
@@ -132,12 +133,17 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 22,
-    backgroundColor: 'rgba(233,168,37,0.16)',
-    borderWidth: 2,
-    borderColor: theme.colors.accent,
+    backgroundColor: theme.colors.accent,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
+  },
+  brandTag: {
+    color: theme.colors.accent,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1,
+    marginBottom: 4,
   },
   brand: {
     color: theme.colors.white,

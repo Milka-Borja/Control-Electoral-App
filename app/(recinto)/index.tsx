@@ -1,6 +1,6 @@
 import React from 'react';
-import { RecintoMesasScreen } from '../../src/presentation/screens/recinto/RecintoMesasScreen';
+import { RecintoPanelScreen } from '../../src/presentation/screens/recinto/RecintoPanelScreen';
 
 export default function RecintoIndexRoute() {
-  return <RecintoMesasScreen />;
+  return <RecintoPanelScreen />;
 }
