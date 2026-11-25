@@ -9,6 +9,7 @@
     "newArchEnabled": true,
     "android": {
       "package": "com.controlelectoral.app",
+      "icon": "./assets/Movimiento_CREO_-_Lista_21.png",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.ACCESS_FINE_LOCATION",
