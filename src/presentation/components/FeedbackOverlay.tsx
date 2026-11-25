@@ -6,7 +6,7 @@ import { FeedbackType, useFeedbackStore } from '../store/feedbackStore';
 import { theme } from '../theme/theme';
 
 const LOTTIE_SOURCES: Record<FeedbackType, AnimationObject> = {
-  loading: require('../../../assets/lottie/loading.json'),
+  loading: require('../../../assets/lottie/creo-logo.json'),
   syncing: require('../../../assets/lottie/syncing.json'),
   success: require('../../../assets/lottie/success.json'),
   error: require('../../../assets/lottie/error.json'),
@@ -41,6 +41,7 @@ export function FeedbackOverlay() {
         <Animated.View entering={ZoomIn.duration(220)} style={styles.card}>
           <View style={[styles.topBar, { backgroundColor: accent }]} />
           <LottieView
+            key={feedback.type}
             source={LOTTIE_SOURCES[feedback.type]}
             autoPlay
             loop={isLoop}
@@ -94,8 +95,8 @@ const styles = StyleSheet.create({
     height: 6,
   },
   lottie: {
-    width: 88,
-    height: 88,
+    width: 120,
+    height: 120,
     marginTop: 6,
   },
   title: {

@@ -5,6 +5,7 @@ import {
   ChevronRight,
   Landmark,
   MapPin,
+  Star,
   Users,
 } from 'lucide-react-native';
 import React, { useState } from 'react';
@@ -19,15 +20,17 @@ import {
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { DignidadElectoral, ResultadoCandidato } from '../../../domain/entities';
 import { AppHeader } from '../../components/AppHeader';
+import { PartyLogoBadge } from '../../components/PartyLogoBadge';
 import {
   useActasAuditoriaQuery,
   useEscrutinioRealtimeSync,
   useExitPollQuery,
   useRecintosQuery,
 } from '../../hooks/useElectoralQueries';
-import { theme } from '../../theme/theme';
+import { getPartyColor, theme } from '../../theme/theme';
 
 function CandidateBarRow({ item, rank }: { item: ResultadoCandidato; rank: number }) {
+  const partyColor = getPartyColor(item.numeroLista, item.sigla, item.colorHex);
   const barStyle = useAnimatedStyle(() => ({
     width: withTiming(`${Math.min(100, item.porcentaje)}%`, { duration: 400 }),
   }));
@@ -37,34 +40,42 @@ function CandidateBarRow({ item, rank }: { item: ResultadoCandidato; rank: numbe
       style={[
         styles.candCard,
         item.esCliente === true && styles.candCardClient,
+        { borderLeftColor: partyColor },
       ]}
     >
       <View style={styles.candTop}>
-        <View style={[styles.listaBadge, { backgroundColor: item.colorHex }]}>
-          <Text style={styles.listaText}>L{item.numeroLista}</Text>
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.candName} numberOfLines={1}>
-            {rank === 1 && item.votos > 0 ? '★ ' : ''}
-            {item.candidatoNombre}
+        <PartyLogoBadge numeroLista={item.numeroLista} sigla={item.sigla} />
+        <View style={styles.candidateInfo}>
+          <View style={styles.candidateNameRow}>
+            {rank === 1 && item.votos > 0 ? (
+              <Star size={16} color={theme.colors.amber} fill={theme.colors.amber} />
+            ) : null}
+            <Text style={styles.candName} numberOfLines={1}>
+              {item.candidatoNombre}
+            </Text>
+          </View>
+          <Text style={[styles.orgSub, { color: partyColor }]} numberOfLines={1}>
+            Lista {item.numeroLista} · {item.sigla}
           </Text>
-          <Text style={styles.orgSub} numberOfLines={1}>
-            {item.sigla} · {item.organizacionNombre}
+          <Text style={styles.orgName} numberOfLines={1}>
+            {item.organizacionNombre}
           </Text>
           {item.esCliente === true ? (
             <Text style={styles.orgClientBadge}>
-              Lista 21 · Nuestra organización
+              LISTA 21 · CREO
             </Text>
           ) : null}
         </View>
         <View style={styles.votesCol}>
-          <Text style={styles.pctText}>{item.porcentaje.toFixed(1)}%</Text>
+          <Text style={[styles.pctText, { color: partyColor }]}>
+            {item.porcentaje.toFixed(1)}%
+          </Text>
           <Text style={styles.votesText}>{item.votos} votos</Text>
         </View>
       </View>
       <View style={styles.barTrack}>
         <Animated.View
-          style={[styles.barFill, { backgroundColor: item.colorHex }, barStyle]}
+          style={[styles.barFill, { backgroundColor: partyColor }, barStyle]}
         />
       </View>
     </View>
@@ -329,7 +340,7 @@ const styles = StyleSheet.create({
   quickNavRow: { flexDirection: 'row', gap: 10 },
   quickBtn: {
     flex: 1,
-    minHeight: 50,
+    minHeight: theme.touch.minButtonHeight,
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.md,
     borderWidth: 1.5,
@@ -339,12 +350,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  quickBtnText: { fontSize: 15, fontWeight: '800', color: theme.colors.text },
+  quickBtnText: { fontSize: 16, fontWeight: '800', color: theme.colors.text },
   toggleRow: { flexDirection: 'row', gap: 8 },
   toggleBtn: {
     flex: 1,
     minWidth: 0,
-    minHeight: 50,
+    minHeight: theme.touch.minButtonHeight,
     paddingHorizontal: 8,
     borderRadius: theme.radius.md,
     backgroundColor: theme.colors.surface,
@@ -359,7 +370,7 @@ const styles = StyleSheet.create({
   toggleText: {
     flex: 1,
     minWidth: 0,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '800',
     color: theme.colors.primary,
     textAlign: 'center',
@@ -367,18 +378,20 @@ const styles = StyleSheet.create({
   toggleTextActive: { color: theme.colors.white },
   chipsRow: { gap: 8, paddingVertical: 2 },
   chip: {
+    minHeight: theme.touch.minButtonHeight,
     paddingHorizontal: 14,
-    paddingVertical: 9,
+    paddingVertical: 12,
     borderRadius: 99,
     backgroundColor: theme.colors.surface,
     borderWidth: 1,
     borderColor: theme.colors.border,
+    justifyContent: 'center',
   },
   chipActive: {
     backgroundColor: theme.colors.primaryDark,
     borderColor: theme.colors.primaryDark,
   },
-  chipText: { fontSize: 13, fontWeight: '700', color: theme.colors.text },
+  chipText: { fontSize: 15, fontWeight: '700', color: theme.colors.text },
   chipTextActive: { color: theme.colors.white },
   kpiRow: { flexDirection: 'row', gap: 10 },
   kpiCard: {
@@ -390,8 +403,8 @@ const styles = StyleSheet.create({
     borderTopWidth: 4,
     elevation: 2,
   },
-  kpiVal: { fontSize: 21, fontWeight: '800' },
-  kpiLbl: { fontSize: 11, fontWeight: '700', color: theme.colors.textSecondary, marginTop: 2 },
+  kpiVal: { fontSize: theme.typography.voteNumber, fontWeight: '800' },
+  kpiLbl: { fontSize: 13, fontWeight: '700', color: theme.colors.textSecondary, marginTop: 2 },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -414,45 +427,42 @@ const styles = StyleSheet.create({
     borderRadius: 99,
     backgroundColor: theme.colors.secondary,
   },
-  liveText: { fontSize: 11, fontWeight: '800', color: theme.colors.secondary },
+  liveText: { fontSize: 12, fontWeight: '800', color: theme.colors.secondary },
   candCard: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.md,
     padding: 13,
     borderWidth: 1,
+    borderLeftWidth: 4,
     borderColor: theme.colors.border,
+    borderLeftColor: theme.colors.border,
     gap: 8,
   },
   candCardClient: {
-    borderLeftWidth: 4,
-    borderLeftColor: theme.colors.primary,
-    backgroundColor: theme.colors.accentSoft,
+    borderWidth: 2,
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.cyanSoft,
   },
   candTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  listaBadge: {
-    width: 42,
-    height: 42,
-    borderRadius: 11,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  listaText: { color: theme.colors.white, fontSize: 13, fontWeight: '800' },
-  candName: { fontSize: 15, fontWeight: '800', color: theme.colors.text },
-  orgSub: { fontSize: 12, color: theme.colors.textSecondary },
+  candidateInfo: { flex: 1 },
+  candidateNameRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  candName: { flex: 1, fontSize: 16, fontWeight: '800', color: theme.colors.text },
+  orgSub: { fontSize: 14, color: theme.colors.textSecondary },
+  orgName: { fontSize: 14, color: theme.colors.textSecondary },
   orgClientBadge: {
     alignSelf: 'flex-start',
     marginTop: 3,
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 99,
-    backgroundColor: theme.colors.accent,
-    color: theme.colors.primaryDark,
-    fontSize: 10,
+    backgroundColor: theme.colors.cyanSoft,
+    color: theme.colors.primary,
+    fontSize: 11,
     fontWeight: '800',
   },
   votesCol: { alignItems: 'flex-end' },
-  pctText: { fontSize: 17, fontWeight: '800', color: theme.colors.primary },
-  votesText: { fontSize: 12, color: theme.colors.textSecondary },
+  pctText: { fontSize: theme.typography.voteNumber, fontWeight: '800', color: theme.colors.primary },
+  votesText: { fontSize: 16, color: theme.colors.textSecondary },
   barTrack: {
     height: 9,
     backgroundColor: theme.colors.surfaceAlt,
@@ -472,9 +482,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  recintoProgName: { flex: 1, fontSize: 15, fontWeight: '700', color: theme.colors.text },
-  recintoProgPct: { fontSize: 15, fontWeight: '800', color: theme.colors.secondary },
-  recintoProgSub: { fontSize: 12, color: theme.colors.textSecondary, marginTop: 3 },
+  recintoProgName: { flex: 1, fontSize: 16, fontWeight: '700', color: theme.colors.text },
+  recintoProgPct: { fontSize: 18, fontWeight: '800', color: theme.colors.secondary },
+  recintoProgSub: { fontSize: 14, color: theme.colors.textSecondary, marginTop: 3 },
   auditRow: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.md,
@@ -485,8 +495,8 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
   },
   auditTitle: { fontSize: 15, fontWeight: '800', color: theme.colors.primary },
-  auditSub: { fontSize: 13, color: theme.colors.textSecondary, marginTop: 2 },
+  auditSub: { fontSize: 14, color: theme.colors.textSecondary, marginTop: 2 },
   gpsLine: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 },
-  gpsOk: { fontSize: 12, fontWeight: '700', color: theme.colors.secondary },
-  gpsAlert: { fontSize: 12, fontWeight: '700', color: theme.colors.danger },
+  gpsOk: { fontSize: 14, fontWeight: '700', color: theme.colors.secondary },
+  gpsAlert: { fontSize: 14, fontWeight: '700', color: theme.colors.danger },
 });

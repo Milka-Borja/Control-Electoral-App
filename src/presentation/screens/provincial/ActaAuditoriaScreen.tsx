@@ -3,11 +3,12 @@ import React from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '../../components/AppHeader';
 import { MapAuditView } from '../../components/MapAuditView';
+import { PartyLogoBadge } from '../../components/PartyLogoBadge';
 import {
   useActaAuditoriaByIdQuery,
   useCatalogosQuery,
 } from '../../hooks/useElectoralQueries';
-import { theme } from '../../theme/theme';
+import { getPartyColor, theme } from '../../theme/theme';
 
 interface Props {
   actaId: string;
@@ -20,7 +21,12 @@ export function ActaAuditoriaScreen({ actaId }: Props) {
   const orgMap = new Map(
     (catalogos?.organizaciones ?? []).map((o) => [
       o.id,
-      { label: `Lista ${o.numeroLista} · ${o.sigla} (${o.nombre})`, color: o.colorHex },
+      {
+        numeroLista: o.numeroLista,
+        sigla: o.sigla,
+        label: `Lista ${o.numeroLista} · ${o.sigla} (${o.nombre})`,
+        color: getPartyColor(o.numeroLista, o.sigla, o.colorHex),
+      },
     ])
   );
 
@@ -133,13 +139,17 @@ export function ActaAuditoriaScreen({ actaId }: Props) {
               const info = orgMap.get(v.organizacionId);
               return (
                 <View key={v.organizacionId} style={styles.voteRow}>
-                  <View
-                    style={[
-                      styles.dot,
-                      { backgroundColor: info?.color ?? theme.colors.primary },
-                    ]}
-                  />
-                  <Text style={styles.orgLabel} numberOfLines={1}>
+                  {info ? (
+                    <PartyLogoBadge
+                      numeroLista={info.numeroLista}
+                      sigla={info.sigla}
+                      size={34}
+                    />
+                  ) : null}
+                  <Text
+                    style={[styles.orgLabel, { color: info?.color ?? theme.colors.primary }]}
+                    numberOfLines={1}
+                  >
                     {info?.label ?? 'Organización'}
                   </Text>
                   <Text style={styles.voteVal}>{v.cantidad}</Text>
@@ -197,7 +207,6 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 6,
   },
-  dot: { width: 12, height: 12, borderRadius: 99 },
   orgLabel: { flex: 1, fontSize: 14, color: theme.colors.text },
   voteVal: { fontSize: 17, fontWeight: '800', color: theme.colors.primary },
 });

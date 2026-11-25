@@ -7,7 +7,7 @@ export default function SplashIndexRoute() {
   return (
     <View style={styles.container}>
       <LottieView
-        source={require('../assets/lottie/loading.json')}
+        source={require('../assets/lottie/creo-logo.json')}
         autoPlay
         loop
         style={styles.lottie}
@@ -21,7 +21,7 @@ export default function SplashIndexRoute() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: theme.colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
@@ -31,14 +31,14 @@ const styles = StyleSheet.create({
     height: 140,
   },
   brand: {
-    color: theme.colors.white,
+    color: theme.colors.primary,
     fontSize: 22,
     fontWeight: '800',
     marginTop: 12,
     textAlign: 'center',
   },
   sub: {
-    color: theme.colors.accent,
+    color: theme.colors.textSecondary,
     fontSize: 15,
     fontWeight: '600',
     marginTop: 6,

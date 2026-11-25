@@ -1,5 +1,65 @@
 import { EstadoSyncActa } from '../../domain/entities';
 
+export const CREO_PALETTE = {
+  primary: '#0A4D9B',
+  primaryDark: '#07356E',
+  primaryLight: '#1565C0',
+  cyan: '#29ABE2',
+  cyanSoft: '#E1F5FE',
+  amber: '#F7941D',
+  amberSoft: '#FEF3C7',
+  red: '#E32227',
+  redSoft: '#FEE2E2',
+  background: '#F4F6F9',
+  stripeTint: '#EAEFF5',
+  surface: '#FFFFFF',
+  surfaceAlt: '#EDF2F7',
+  border: '#DCE3EC',
+  text: '#0F172A',
+  textSecondary: '#475569',
+  textMuted: '#64748B',
+  white: '#FFFFFF',
+  success: '#15803D',
+  successSoft: '#DCFCE7',
+} as const;
+
+export const PARTY_COLORS: Record<
+  number,
+  { primary: string; secondary?: string; accent?: string }
+> = {
+  5: { primary: '#00AEEF', secondary: '#00529B' },
+  6: { primary: '#D97706', secondary: '#F4B400', accent: '#B91C1C' },
+  7: { primary: '#5B2C83' },
+  12: { primary: '#F36F21' },
+  21: { primary: '#003B7A', secondary: '#F5C400' },
+};
+
+const PARTY_LIST_BY_SIGLA: Record<string, number> = {
+  RC: 5,
+  PSC: 6,
+  ADN: 7,
+  ID: 12,
+  CREO: 21,
+};
+
+export function getPartyColor(
+  numeroLista?: number,
+  sigla?: string,
+  fallbackColor?: string,
+): string {
+  const listNumber = numeroLista !== undefined && PARTY_COLORS[numeroLista]
+    ? numeroLista
+    : sigla
+      ? PARTY_LIST_BY_SIGLA[sigla.trim().toUpperCase()]
+      : undefined;
+
+  return (
+    (listNumber === undefined ? undefined : PARTY_COLORS[listNumber]?.primary) ??
+    fallbackColor ??
+    theme.colors.primary
+  );
+}
+
 export const theme = {
   brand: {
     name: 'Movimiento CREO',
@@ -7,29 +67,19 @@ export const theme = {
     jurisdiction: 'Pichincha · Quito',
   },
   colors: {
-    primary: '#003B7A',
-    primaryDark: '#002652',
-    primaryLight: '#1456A0',
-    secondary: '#0F9D58',
-    secondarySoft: '#E6F7EE',
-    accent: '#F5C400',
-    accentSoft: '#FEF9C3',
-    background: '#F4F7FB',
-    surface: '#FFFFFF',
-    surfaceAlt: '#EDF2F7',
-    border: '#D6E0EC',
-    text: '#0F172A',
-    textSecondary: '#475569',
-    textMuted: '#64748B',
-    white: '#FFFFFF',
-    danger: '#DC2626',
-    dangerSoft: '#FEE2E2',
-    warning: '#D97706',
-    warningSoft: '#FEF3C7',
-    info: '#2563EB',
-    infoSoft: '#DBEAFE',
-    conflict: '#7C3AED',
-    conflictSoft: '#EDE9FE',
+    ...CREO_PALETTE,
+    secondary: CREO_PALETTE.cyan,
+    secondarySoft: CREO_PALETTE.cyanSoft,
+    accent: CREO_PALETTE.amber,
+    accentSoft: CREO_PALETTE.amberSoft,
+    danger: CREO_PALETTE.red,
+    dangerSoft: CREO_PALETTE.redSoft,
+    warning: '#B45309',
+    warningSoft: CREO_PALETTE.amberSoft,
+    info: CREO_PALETTE.primaryLight,
+    infoSoft: CREO_PALETTE.cyanSoft,
+    conflict: '#92400E',
+    conflictSoft: CREO_PALETTE.amberSoft,
   },
   spacing: {
     xs: 4,
@@ -64,8 +114,8 @@ export const SYNC_STATUS_META: Record<
 > = {
   PENDIENTE: { label: 'Pendiente', bg: '#E2E8F0', color: '#334155' },
   GUARDADO: { label: 'Guardado local', bg: '#FEF3C7', color: '#B45309' },
-  EN_PROCESO: { label: 'En proceso', bg: '#DBEAFE', color: '#1D4ED8' },
+  EN_PROCESO: { label: 'En proceso', bg: '#E1F5FE', color: '#0A4D9B' },
   ENVIADO: { label: 'Enviado', bg: '#DCFCE7', color: '#15803D' },
-  FALLADO: { label: 'Falló envío', bg: '#FEE2E2', color: '#B91C1C' },
-  CONFLICTO: { label: 'En conflicto', bg: '#EDE9FE', color: '#6D28D9' },
+  FALLADO: { label: 'Falló envío', bg: '#FEE2E2', color: '#E32227' },
+  CONFLICTO: { label: 'En conflicto', bg: '#FEF3C7', color: '#92400E' },
 };

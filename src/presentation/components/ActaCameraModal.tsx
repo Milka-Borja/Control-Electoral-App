@@ -171,8 +171,8 @@ export function ActaCameraModal({ visible, onClose, onConfirm }: Props) {
                     ]}
                   >
                     {preview.sharpness.isSharp
-                      ? `Imagen nítida (índice ${preview.sharpness.score})`
-                      : `Imagen rechazada (índice ${preview.sharpness.score})`}
+                      ? `Imagen nítida (nitidez: ${preview.sharpness.score} · luz: ${preview.sharpness.brightness})`
+                      : `Imagen rechazada (nitidez: ${preview.sharpness.score} · luz: ${preview.sharpness.brightness})`}
                   </Text>
                   <Text style={styles.statusMsg}>{preview.sharpness.message}</Text>
                 </View>

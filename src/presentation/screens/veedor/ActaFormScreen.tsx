@@ -31,6 +31,7 @@ import {
 } from '../../components/ActaCameraModal';
 import { AppHeader } from '../../components/AppHeader';
 import { ControlledInput } from '../../components/ControlledInput';
+import { PartyLogoBadge } from '../../components/PartyLogoBadge';
 import {
   useActaQuery,
   useCatalogosQuery,
@@ -39,7 +40,7 @@ import {
 import { useAuthStore } from '../../store/authStore';
 import { useFeedbackStore } from '../../store/feedbackStore';
 import { useSyncStore } from '../../store/syncStore';
-import { theme } from '../../theme/theme';
+import { getPartyColor, theme } from '../../theme/theme';
 
 interface ActaFormValues {
   totalSufragantes: number;
@@ -175,7 +176,7 @@ export function ActaFormScreen({
   const animatedBarStyle = useAnimatedStyle(() => ({
     width: withTiming(`${progresoPct}%`, { duration: 240 }),
     backgroundColor: cuadreExacto
-      ? theme.colors.secondary
+      ? theme.colors.success
       : sumaTotal > totalSufragantes || algunaListaSupera
         ? theme.colors.danger
         : theme.colors.warning,
@@ -299,14 +300,14 @@ export function ActaFormScreen({
         <View style={styles.mathTop}>
           <View style={styles.mathLabelRow}>
             {cuadreExacto ? (
-              <CheckCircle2 size={18} color={theme.colors.secondary} />
+              <CheckCircle2 size={18} color={theme.colors.success} />
             ) : (
               <AlertCircle size={18} color={theme.colors.danger} />
             )}
             <Text
               style={[
                 styles.mathTitle,
-                { color: cuadreExacto ? theme.colors.secondary : theme.colors.danger },
+                { color: cuadreExacto ? theme.colors.success : theme.colors.danger },
               ]}
             >
               {algunaListaSupera
@@ -371,15 +372,39 @@ export function ActaFormScreen({
               const candName = candidatosPorOrg.get(org.id) ?? 'Candidato';
               const val = Number(votosPorOrg[org.id] || 0);
               const excede = val > totalSufragantes;
+              const partyColor = getPartyColor(
+                org.numeroLista,
+                org.sigla,
+                org.colorHex,
+              );
 
               return (
                 <View
                   key={org.id}
-                  style={[styles.orgRow, org.esCliente && styles.orgRowClient]}
+                  style={[
+                    styles.orgRow,
+                    org.esCliente && styles.orgRowClient,
+                    { borderColor: partyColor },
+                  ]}
                 >
-                  <View style={[styles.orgStripe, { backgroundColor: org.colorHex }]} />
+                  <View
+                    style={[
+                      styles.orgStripe,
+                      { backgroundColor: partyColor },
+                    ]}
+                  />
+                  <PartyLogoBadge
+                    numeroLista={org.numeroLista}
+                    sigla={org.sigla}
+                    size={42}
+                  />
                   <View style={styles.orgInfo}>
-                    <Text style={styles.orgLista}>
+                    <Text
+                      style={[
+                        styles.orgLista,
+                        { color: partyColor, borderColor: partyColor },
+                      ]}
+                    >
                       Lista {org.numeroLista} · {org.sigla}
                     </Text>
                     <Text style={styles.orgName} numberOfLines={1}>
@@ -387,7 +412,7 @@ export function ActaFormScreen({
                     </Text>
                     {org.esCliente ? (
                       <Text style={styles.orgClientBadge}>
-                        Lista 21 · Nuestra organización
+                        LISTA 21 · CREO
                       </Text>
                     ) : null}
                     <Text style={styles.candName} numberOfLines={1}>
@@ -508,8 +533,8 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   mathLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 },
-  mathTitle: { fontSize: 13, fontWeight: '800' },
-  mathNumbers: { fontSize: 15, fontWeight: '800', color: theme.colors.primary },
+  mathTitle: { fontSize: 16, fontWeight: '800' },
+  mathNumbers: { fontSize: theme.typography.voteNumber, fontWeight: '800', color: theme.colors.primary },
   progressTrack: {
     height: 8,
     backgroundColor: theme.colors.surfaceAlt,
@@ -520,10 +545,12 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 16, paddingTop: 14, gap: 12, paddingBottom: 38 },
   sectionCard: {
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.lg,
+    borderRadius: 16,
     padding: 16,
     borderWidth: 1,
     borderColor: theme.colors.border,
+    borderLeftWidth: 5,
+    borderLeftColor: theme.colors.primary,
   },
   sectionTitle: {
     fontSize: 17,
@@ -537,31 +564,46 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.surfaceAlt,
+    paddingHorizontal: 8,
+    marginBottom: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
   },
   orgRowClient: {
-    borderLeftWidth: 4,
-    borderLeftColor: theme.colors.primary,
-    backgroundColor: theme.colors.accentSoft,
+    borderWidth: 2,
+    borderColor: theme.colors.primary,
+    borderLeftColor: theme.colors.cyan,
+    backgroundColor: theme.colors.cyanSoft,
   },
   orgStripe: { width: 8, height: 54, borderRadius: 6 },
   orgInfo: { flex: 1 },
-  orgLista: { fontSize: 12, fontWeight: '800', color: theme.colors.textMuted },
-  orgName: { fontSize: 15, fontWeight: '700', color: theme.colors.text },
+  orgLista: {
+    alignSelf: 'flex-start',
+    fontSize: 14,
+    fontWeight: '800',
+    color: theme.colors.textMuted,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderRadius: 99,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  orgName: { fontSize: 16, fontWeight: '700', color: theme.colors.text },
   orgClientBadge: {
     alignSelf: 'flex-start',
     marginTop: 3,
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 99,
-    backgroundColor: theme.colors.accent,
-    color: theme.colors.primaryDark,
-    fontSize: 10,
+    backgroundColor: theme.colors.cyanSoft,
+    color: theme.colors.primary,
+    fontSize: 11,
     fontWeight: '800',
   },
-  candName: { fontSize: 13, color: theme.colors.textSecondary },
-  excedeText: { fontSize: 12, fontWeight: '700', color: theme.colors.danger, marginTop: 2 },
+  candName: { fontSize: 14, color: theme.colors.textSecondary },
+  excedeText: { fontSize: 14, fontWeight: '700', color: theme.colors.danger, marginTop: 2 },
   voteInput: {
     width: 84,
     height: 54,
@@ -580,10 +622,10 @@ const styles = StyleSheet.create({
     color: theme.colors.danger,
   },
   photoHint: {
-    fontSize: 13,
+    fontSize: 16,
     color: theme.colors.textSecondary,
     marginBottom: 12,
-    lineHeight: 19,
+    lineHeight: 23,
   },
   cameraBtn: {
     minHeight: theme.touch.minButtonHeight,
@@ -620,25 +662,26 @@ const styles = StyleSheet.create({
   },
   gpsBadgeText: { fontSize: 12, fontWeight: '700', color: theme.colors.secondary },
   retakeSmallBtn: {
+    minHeight: 52,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: theme.colors.primary,
   },
-  retakeSmallText: { fontSize: 13, fontWeight: '700', color: theme.colors.primary },
+  retakeSmallText: { fontSize: 14, fontWeight: '700', color: theme.colors.primary },
   refNotice: {
     backgroundColor: theme.colors.warningSoft,
     padding: 10,
     borderRadius: 10,
   },
-  refNoticeText: { fontSize: 13, color: theme.colors.warning, fontWeight: '600' },
+  refNoticeText: { fontSize: 14, color: theme.colors.warning, fontWeight: '600' },
   saveBtn: {
     minHeight: 58,
-    backgroundColor: theme.colors.secondary,
+    backgroundColor: theme.colors.primary,
     borderRadius: theme.radius.md,
     flexDirection: 'row',
     justifyContent: 'center',

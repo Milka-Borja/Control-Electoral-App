@@ -3,9 +3,9 @@ import jpeg from 'jpeg-js';
 import { ISharpnessPort, SharpnessResult } from '../../domain/ports';
 
 // Ajustar este umbral probando actas reales del CNE en tu celular físico (ADR-04)
-export const SHARPNESS_THRESHOLD = 85;
-const MIN_BRIGHTNESS = 35;
-const MAX_BRIGHTNESS = 235;
+export const SHARPNESS_THRESHOLD = 950;
+const MIN_BRIGHTNESS = 18;
+const MAX_BRIGHTNESS = 242;
 
 const BASE64_CHARS =
   'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
@@ -41,7 +41,7 @@ export class SharpnessAnalyzer implements ISharpnessPort {
     // 1. Reducir copia temporal en memoria a 180px de ancho para análisis rápido offline
     const manipulated = await ImageManipulator.manipulateAsync(
       photoUri,
-      [{ resize: { width: 180 } }],
+      [{ resize: { width: 320 } }],
       {
         compress: 0.9,
         format: ImageManipulator.SaveFormat.JPEG,
@@ -70,14 +70,19 @@ export class SharpnessAnalyzer implements ISharpnessPort {
 
     const avgBrightness = Math.round((brightnessSum / totalPixels) * 10) / 10;
 
-    // 3. Aplicar kernel Laplaciano [0, 1, 0, 1, -4, 1, 0, 1, 0] y calcular varianza
+    // 3. Aplicar kernel Laplaciano en la zona central (60% interior donde están los votos)
+    const startX = Math.max(1, Math.floor(width * 0.2));
+    const endX = Math.min(width - 1, Math.ceil(width * 0.8));
+    const startY = Math.max(1, Math.floor(height * 0.2));
+    const endY = Math.min(height - 1, Math.ceil(height * 0.8));
+
     let lapSum = 0;
     let lapSqSum = 0;
     let count = 0;
 
-    for (let y = 1; y < height - 1; y++) {
+    for (let y = startY; y < endY; y++) {
       const row = y * width;
-      for (let x = 1; x < width - 1; x++) {
+      for (let x = startX; x < endX; x++) {
         const idx = row + x;
         const lap =
           gray[idx - width] +
@@ -91,7 +96,6 @@ export class SharpnessAnalyzer implements ISharpnessPort {
         count++;
       }
     }
-
     const mean = lapSum / count;
     const variance = lapSqSum / count - mean * mean;
     const score = Math.round(variance * 10) / 10;

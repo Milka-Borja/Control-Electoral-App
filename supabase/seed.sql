@@ -54,11 +54,9 @@ INSERT INTO public.organizaciones (numero_lista, sigla, nombre, color_hex, es_cl
 
 (5, 'RC', 'Revolución Ciudadana', '#00AEEF', false),
 
-(6, 'PSC', 'Partido Social Cristiano', '#D62828', false),
-
-(7, 'ADN', 'Acción Democrática Nacional', '#F58220', false),
-
-(12, 'ID', 'Izquierda Democrática', '#7B2CBF', false)
+(6, 'PSC', 'Partido Social Cristiano', '#D97706', false),
+(7, 'ADN', 'Acción Democrática Nacional', '#5B2C83', false),
+(12, 'ID', 'Izquierda Democrática', '#F36F21', false)
 
 ON CONFLICT (numero_lista) DO UPDATE SET
 

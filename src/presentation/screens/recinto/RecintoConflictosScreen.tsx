@@ -5,13 +5,14 @@ import { FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native
 import { ConflictoActa } from '../../../domain/entities';
 import { container } from '../../../infrastructure/di/container';
 import { AppHeader } from '../../components/AppHeader';
+import { PartyLogoBadge } from '../../components/PartyLogoBadge';
 import {
   QUERY_KEYS,
   useCatalogosQuery,
   useConflictosPendientesQuery,
 } from '../../hooks/useElectoralQueries';
 import { useFeedbackStore } from '../../store/feedbackStore';
-import { theme } from '../../theme/theme';
+import { getPartyColor, theme } from '../../theme/theme';
 
 export function RecintoConflictosScreen() {
   const queryClient = useQueryClient();
@@ -21,7 +22,14 @@ export function RecintoConflictosScreen() {
     useFeedbackStore();
 
   const orgMap = new Map(
-    (catalogos?.organizaciones ?? []).map((o) => [o.id, `L${o.numeroLista} ${o.sigla}`])
+    (catalogos?.organizaciones ?? []).map((o) => [
+      o.id,
+      {
+        numeroLista: o.numeroLista,
+        sigla: o.sigla,
+        color: getPartyColor(o.numeroLista, o.sigla, o.colorHex),
+      },
+    ])
   );
 
   const resolver = (
@@ -83,11 +91,23 @@ export function RecintoConflictosScreen() {
           <Text style={styles.line}>
             Bl: {item.servidor.votosBlancos} · Nu: {item.servidor.votosNulos}
           </Text>
-          {item.servidor.votos.map((v) => (
-            <Text key={v.organizacionId} style={styles.voteLine}>
-              {orgMap.get(v.organizacionId) ?? 'Lista'}: {v.cantidad}
-            </Text>
-          ))}
+          {item.servidor.votos.map((v) => {
+            const org = orgMap.get(v.organizacionId);
+            return (
+              <View key={v.organizacionId} style={styles.voteLineRow}>
+                {org ? (
+                  <PartyLogoBadge
+                    numeroLista={org.numeroLista}
+                    sigla={org.sigla}
+                    size={26}
+                  />
+                ) : null}
+                <Text style={[styles.voteLine, org && { color: org.color }]} numberOfLines={1}>
+                  {org ? org.sigla : 'Lista'}: {v.cantidad}
+                </Text>
+              </View>
+            );
+          })}
         </View>
 
         {/* Columna Entrante */}
@@ -105,11 +125,23 @@ export function RecintoConflictosScreen() {
           <Text style={styles.line}>
             Bl: {item.entrante.votosBlancos} · Nu: {item.entrante.votosNulos}
           </Text>
-          {item.entrante.votos.map((v) => (
-            <Text key={v.organizacionId} style={styles.voteLine}>
-              {orgMap.get(v.organizacionId) ?? 'Lista'}: {v.cantidad}
-            </Text>
-          ))}
+          {item.entrante.votos.map((v) => {
+            const org = orgMap.get(v.organizacionId);
+            return (
+              <View key={v.organizacionId} style={styles.voteLineRow}>
+                {org ? (
+                  <PartyLogoBadge
+                    numeroLista={org.numeroLista}
+                    sigla={org.sigla}
+                    size={26}
+                  />
+                ) : null}
+                <Text style={[styles.voteLine, org && { color: org.color }]} numberOfLines={1}>
+                  {org ? org.sigla : 'Lista'}: {v.cantidad}
+                </Text>
+              </View>
+            );
+          })}
           <Text style={styles.author}>Por: {item.entrante.usuarioNombre}</Text>
         </View>
       </View>
@@ -183,7 +215,8 @@ const styles = StyleSheet.create({
   colTitle: { fontSize: 13, fontWeight: '800', marginBottom: 4 },
   thumb: { width: '100%', height: 90, borderRadius: 8, marginBottom: 4, backgroundColor: '#000' },
   line: { fontSize: 12, fontWeight: '700', color: theme.colors.text },
-  voteLine: { fontSize: 12, color: theme.colors.textSecondary },
+  voteLineRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  voteLine: { flex: 1, fontSize: 12, color: theme.colors.textSecondary },
   author: { fontSize: 11, fontStyle: 'italic', color: theme.colors.textMuted, marginTop: 4 },
   btnRow: { flexDirection: 'row', gap: 10 },
   choiceBtn: {
