@@ -255,7 +255,7 @@ export function ProvincialExitPollScreen() {
 
         {/* Resultados acumulados en vivo por candidato */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
+          <Text style={[styles.sectionTitle, styles.sectionHeaderTitle]}>
             Conteo acumulado ({resumen?.totalVotosValidos ?? 0} votos válidos)
           </Text>
           <View style={styles.livePill}>
@@ -411,9 +411,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 4,
   },
+  sectionHeaderTitle: { flex: 1, minWidth: 0 },
   sectionTitle: { fontSize: 16, fontWeight: '800', color: theme.colors.text },
   livePill: {
     flexDirection: 'row',
+    flexShrink: 0,
     alignItems: 'center',
     gap: 5,
     backgroundColor: theme.colors.secondarySoft,
@@ -427,7 +429,12 @@ const styles = StyleSheet.create({
     borderRadius: 99,
     backgroundColor: theme.colors.secondary,
   },
-  liveText: { fontSize: 12, fontWeight: '800', color: theme.colors.secondary },
+  liveText: {
+    flexShrink: 0,
+    fontSize: 12,
+    fontWeight: '800',
+    color: theme.colors.secondary,
+  },
   candCard: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.md,

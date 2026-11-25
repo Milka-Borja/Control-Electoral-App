@@ -4,6 +4,8 @@ import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import {
   BackHandler,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -62,50 +64,64 @@ export function PrimerIngresoScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-      <View style={styles.card}>
-        <View style={styles.iconWrap}>
-          <KeyRound size={32} color={theme.colors.primary} />
+    <KeyboardAvoidingView
+      style={styles.root}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={0}
+    >
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets={true}
+      >
+        <View style={styles.card}>
+          <View style={styles.iconWrap}>
+            <KeyRound size={32} color={theme.colors.primary} />
+          </View>
+          <Text style={styles.title}>Cambio obligatorio de contraseña</Text>
+          <Text style={styles.desc}>
+            Hola {user?.nombres ?? ''}. Como su cuenta fue creada por un coordinador, debe elegir una contraseña personal antes de continuar.
+          </Text>
+
+          <ControlledInput
+            control={control}
+            name="password"
+            label="Nueva contraseña"
+            placeholder="Mínimo 8 caracteres, mayúscula y número"
+            secureTextEntry
+          />
+
+          <ControlledInput
+            control={control}
+            name="confirmPassword"
+            label="Confirmar contraseña"
+            placeholder="Repita su nueva contraseña"
+            secureTextEntry
+          />
+
+          <Pressable
+            onPress={handleSubmit(onSubmit)}
+            disabled={isSubmitting}
+            style={styles.btn}
+          >
+            <Text style={styles.btnText}>Guardar contraseña definitiva</Text>
+          </Pressable>
         </View>
-        <Text style={styles.title}>Cambio obligatorio de contraseña</Text>
-        <Text style={styles.desc}>
-          Hola {user?.nombres ?? ''}. Como su cuenta fue creada por un coordinador, debe elegir una contraseña personal antes de continuar.
-        </Text>
-
-        <ControlledInput
-          control={control}
-          name="password"
-          label="Nueva contraseña"
-          placeholder="Mínimo 8 caracteres, mayúscula y número"
-          secureTextEntry
-        />
-
-        <ControlledInput
-          control={control}
-          name="confirmPassword"
-          label="Confirmar contraseña"
-          placeholder="Repita su nueva contraseña"
-          secureTextEntry
-        />
-
-        <Pressable
-          onPress={handleSubmit(onSubmit)}
-          disabled={isSubmitting}
-          style={styles.btn}
-        >
-          <Text style={styles.btnText}>Guardar contraseña definitiva</Text>
-        </Pressable>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  root: { flex: 1 },
+  scrollView: { flex: 1 },
   scroll: {
     flexGrow: 1,
     backgroundColor: theme.colors.background,
     justifyContent: 'center',
     padding: theme.spacing.lg,
+    paddingBottom: 120,
   },
   card: {
     backgroundColor: theme.colors.surface,

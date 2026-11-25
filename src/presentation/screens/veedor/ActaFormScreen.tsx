@@ -10,6 +10,7 @@ import {
 import React, { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import {
+  ActivityIndicator,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -74,7 +75,14 @@ export function ActaFormScreen({
   const { showLoading, hideFeedback, showSuccess, showError, showWarning } =
     useFeedbackStore();
 
-  const { data: catalogos } = useCatalogosQuery();
+  const {
+    data: catalogos,
+    isLoading: catalogosLoading,
+    isFetching: catalogosFetching,
+    isError: catalogosError,
+    error: catalogosQueryError,
+    refetch: refetchCatalogos,
+  } = useCatalogosQuery();
   const { data: existingActa } = useActaQuery(mesaId, dignidad);
 
   const organizaciones = useMemo(
@@ -332,7 +340,10 @@ export function ActaFormScreen({
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+        >
           {/* Paso 1: Totales del acta */}
           <View style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>1. Totales del Acta de Escrutinio</Text>
@@ -368,7 +379,30 @@ export function ActaFormScreen({
           {/* Paso 2: Votos por cada una de las 5 organizaciones */}
           <View style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>2. Votos por Organización Política</Text>
-            {organizaciones.map((org) => {
+            {catalogosLoading ? (
+              <ActivityIndicator color={theme.colors.primary} />
+            ) : organizaciones.length === 0 ? (
+              <View style={styles.catalogEmpty}>
+                <Text style={styles.catalogEmptyText}>
+                  {catalogosError
+                    ? catalogosQueryError instanceof Error
+                      ? `No se pudieron cargar las organizaciones: ${catalogosQueryError.message}`
+                      : 'No se pudieron cargar las organizaciones.'
+                    : 'No hay organizaciones disponibles para registrar los votos.'}
+                </Text>
+                <Pressable
+                  onPress={() => void refetchCatalogos()}
+                  disabled={catalogosFetching}
+                  style={styles.catalogRetryBtn}
+                >
+                  {catalogosFetching ? (
+                    <ActivityIndicator size="small" color={theme.colors.white} />
+                  ) : (
+                    <Text style={styles.catalogRetryText}>Reintentar carga</Text>
+                  )}
+                </Pressable>
+              </View>
+            ) : organizaciones.map((org) => {
               const candName = candidatosPorOrg.get(org.id) ?? 'Candidato';
               const val = Number(votosPorOrg[org.id] || 0);
               const excede = val > totalSufragantes;
@@ -542,7 +576,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   progressFill: { height: '100%', borderRadius: 99 },
-  scroll: { paddingHorizontal: 16, paddingTop: 14, gap: 12, paddingBottom: 38 },
+  scroll: { paddingHorizontal: 16, paddingTop: 14, gap: 12, paddingBottom: 120 },
   sectionCard: {
     backgroundColor: theme.colors.surface,
     borderRadius: 16,
@@ -557,6 +591,29 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: theme.colors.primary,
     marginBottom: 12,
+  },
+  catalogEmpty: {
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 12,
+  },
+  catalogEmptyText: {
+    color: theme.colors.textSecondary,
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  catalogRetryBtn: {
+    minHeight: 42,
+    paddingHorizontal: 16,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  catalogRetryText: {
+    color: theme.colors.white,
+    fontSize: 14,
+    fontWeight: '700',
   },
   twoCols: { flexDirection: 'row', gap: 12 },
   orgRow: {

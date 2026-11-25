@@ -53,7 +53,8 @@ export function LoginScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={0}
     >
       <View pointerEvents="none" style={styles.backdrop}>
         <Svg
@@ -108,6 +109,7 @@ export function LoginScreen() {
       <ScrollView
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets={true}
       >
         <View style={styles.hero}>
           <View style={styles.logoCard}>
@@ -198,6 +200,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     padding: theme.spacing.lg,
+    paddingBottom: 120,
   },
   hero: {
     alignItems: 'center',

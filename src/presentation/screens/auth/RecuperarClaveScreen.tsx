@@ -3,7 +3,15 @@ import { useRouter } from 'expo-router';
 import { MailCheck } from 'lucide-react-native';
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { RecoveryInput, recoverySchema } from '../../../domain/validators/userSchema';
 import { container } from '../../../infrastructure/di/container';
 import { AppHeader } from '../../components/AppHeader';
@@ -44,9 +52,17 @@ export function RecuperarClaveScreen() {
   };
 
   return (
-    <View style={styles.root}>
+    <KeyboardAvoidingView
+      style={styles.root}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={0}
+    >
       <AppHeader title="Recuperar acceso" subtitle="Solo correos verificados" showBack />
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets={true}
+      >
         <View style={styles.card}>
           <MailCheck size={36} color={theme.colors.primary} />
           <Text style={styles.title}>Restablecer contraseña</Text>
@@ -72,13 +88,13 @@ export function RecuperarClaveScreen() {
           </Pressable>
         </View>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.colors.background },
-  content: { padding: theme.spacing.lg },
+  content: { padding: theme.spacing.lg, paddingBottom: 120 },
   card: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,

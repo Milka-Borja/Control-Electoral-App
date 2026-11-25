@@ -5,6 +5,8 @@ import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import {
   Modal,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -20,6 +22,7 @@ import {
 import { container } from '../../../infrastructure/di/container';
 import { AppHeader } from '../../components/AppHeader';
 import { ControlledInput } from '../../components/ControlledInput';
+import { MapPickerView } from '../../components/MapPickerView';
 import {
   QUERY_KEYS,
   useCoordinadoresQuery,
@@ -41,6 +44,8 @@ export function ProvincialRecintosScreen() {
     control,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { isSubmitting },
   } = useForm<CreateRecintoInput>({
     resolver: zodResolver(createRecintoSchema),
@@ -52,6 +57,8 @@ export function ProvincialRecintosScreen() {
       cantidadMesas: 4,
     },
   });
+  const latitud = watch('latitud');
+  const longitud = watch('longitud');
 
   const onCreateRecinto = async (values: CreateRecintoInput) => {
     showLoading('Registrando recinto...', 'Creando recinto y mesas electorales');
@@ -108,14 +115,22 @@ export function ProvincialRecintosScreen() {
   );
 
   return (
-    <View style={styles.root}>
+    <KeyboardAvoidingView
+      style={styles.root}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={0}
+    >
       <AppHeader
         title="Recintos Electorales"
         subtitle="Pichincha · Quito (RF-06, RF-07)"
         showBack
       />
 
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets={true}
+      >
         <Pressable
           onPress={() => setShowCreateForm((v) => !v)}
           style={styles.toggleCreateBtn}
@@ -141,6 +156,14 @@ export function ProvincialRecintosScreen() {
               label="Nombre del recinto electoral"
               placeholder="Ej. Unidad Educativa Simón Bolívar"
             />
+            <MapPickerView
+              latitude={latitud}
+              longitude={longitud}
+              onLocationSelect={(lat, lng) => {
+                setValue('latitud', lat, { shouldDirty: true, shouldValidate: true });
+                setValue('longitud', lng, { shouldDirty: true, shouldValidate: true });
+              }}
+            />
             <View style={styles.twoCols}>
               <View style={{ flex: 1 }}>
                 <Controller
@@ -150,7 +173,7 @@ export function ProvincialRecintosScreen() {
                     <View style={{ marginBottom: 12 }}>
                       <Text style={styles.coordLabel}>Latitud GPS</Text>
                       <TextInput
-                        defaultValue={String(value)}
+                        value={String(value)}
                         onChangeText={(txt) => onChange(parseFloat(txt) || 0)}
                         keyboardType="numbers-and-punctuation"
                         style={styles.coordInput}
@@ -170,7 +193,7 @@ export function ProvincialRecintosScreen() {
                     <View style={{ marginBottom: 12 }}>
                       <Text style={styles.coordLabel}>Longitud GPS</Text>
                       <TextInput
-                        defaultValue={String(value)}
+                        value={String(value)}
                         onChangeText={(txt) => onChange(parseFloat(txt) || 0)}
                         keyboardType="numbers-and-punctuation"
                         style={styles.coordInput}
@@ -281,13 +304,13 @@ export function ProvincialRecintosScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.colors.background },
-  scroll: { paddingHorizontal: 16, paddingTop: 14, gap: 12, paddingBottom: 32 },
+  scroll: { paddingHorizontal: 16, paddingTop: 14, gap: 12, paddingBottom: 120 },
   toggleCreateBtn: {
     minHeight: theme.touch.minButtonHeight,
     backgroundColor: theme.colors.primary,
@@ -307,14 +330,14 @@ const styles = StyleSheet.create({
   },
   formTitle: { fontSize: 17, fontWeight: '800', color: theme.colors.primary, marginBottom: 12 },
   twoCols: { flexDirection: 'row', gap: 10 },
-  coordLabel: { fontSize: 14, fontWeight: '600', color: theme.colors.text, marginBottom: 6 },
+  coordLabel: { fontSize: 12, fontWeight: '600', color: theme.colors.text, marginBottom: 4 },
   coordInput: {
-    minHeight: 50,
+    minHeight: 42,
     borderWidth: 1.5,
     borderColor: theme.colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    fontSize: 15,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    fontSize: 13,
     backgroundColor: theme.colors.surface,
   },
   errText: { fontSize: 12, color: theme.colors.danger, marginTop: 4 },

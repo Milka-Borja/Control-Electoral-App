@@ -27,18 +27,25 @@ export class TerritorioRepositoryImpl implements ITerritorioRepository {
     organizaciones: Organizacion[];
     candidatos: Candidato[];
   }> {
+    let remote: { organizaciones: Organizacion[]; candidatos: Candidato[] };
     try {
-      const remote = await this.remoteDS.getOrganizacionesYCandidatos();
-      if (remote.organizaciones.length > 0) {
-        await this.catalogLocalDS.saveOrganizacionesYCandidatos(
-          remote.organizaciones,
-          remote.candidatos
-        );
-      }
-      return remote;
-    } catch {
-      return this.catalogLocalDS.getOrganizacionesYCandidatos();
+      remote = await this.remoteDS.getOrganizacionesYCandidatos();
+    } catch (remoteError) {
+      const local = await this.catalogLocalDS.getOrganizacionesYCandidatos();
+      if (local.organizaciones.length > 0) return local;
+      throw remoteError;
     }
+
+    if (remote.organizaciones.length > 0) {
+      await this.catalogLocalDS.saveOrganizacionesYCandidatos(
+        remote.organizaciones,
+        remote.candidatos
+      );
+      return remote;
+    }
+
+    const local = await this.catalogLocalDS.getOrganizacionesYCandidatos();
+    return local.organizaciones.length > 0 ? local : remote;
   }
 
   getRecintosJurisdiccion(): Promise<Recinto[]> {

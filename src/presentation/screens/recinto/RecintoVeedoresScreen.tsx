@@ -3,7 +3,15 @@ import { useQueryClient } from '@tanstack/react-query';
 import { UserPlus } from 'lucide-react-native';
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { z } from 'zod';
 import { CreateUserInput, createUserSchema } from '../../../domain/validators/userSchema';
 import { container } from '../../../infrastructure/di/container';
@@ -62,13 +70,21 @@ export function RecintoVeedoresScreen() {
   };
 
   return (
-    <View style={styles.root}>
+    <KeyboardAvoidingView
+      style={styles.root}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={0}
+    >
       <AppHeader
         title="Gestión de Veedores"
         subtitle="Creación jerárquica autorizada (RF-01, RF-02)"
         showBack
       />
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets={true}
+      >
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Nuevo Veedor Electoral</Text>
           <ControlledInput
@@ -133,13 +149,13 @@ export function RecintoVeedoresScreen() {
           </View>
         ))}
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.colors.background },
-  scroll: { paddingHorizontal: 16, paddingTop: 14, gap: 12, paddingBottom: 32 },
+  scroll: { paddingHorizontal: 16, paddingTop: 14, gap: 12, paddingBottom: 120 },
   card: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,

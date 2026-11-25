@@ -5,7 +5,9 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import {
   FlatList,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -188,7 +190,11 @@ export function RecintoMesasScreen() {
       {/* Modal de asignación o creación inmediata de sustituto externo (RF-20) */}
       <Modal visible={Boolean(selectedMesa)} animationType="slide" transparent>
         <View style={styles.modalBackdrop}>
-          <View style={styles.modalSheet}>
+          <KeyboardAvoidingView
+            style={styles.modalSheet}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={0}
+          >
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
                 JRV N.° {selectedMesa?.numeroJrv} · Gestión de Veedor
@@ -277,7 +283,9 @@ export function RecintoMesasScreen() {
             ) : (
               <ScrollView
                 style={{ maxHeight: 430 }}
+                contentContainerStyle={styles.substituteFormScroll}
                 keyboardShouldPersistTaps="handled"
+                automaticallyAdjustKeyboardInsets={true}
               >
                 <Text style={styles.subHint}>
                   Crea en el acto la cuenta de un veedor sustituto externo, envía su enlace SMTP y le asigna esta mesa.
@@ -330,7 +338,7 @@ export function RecintoMesasScreen() {
                 </Pressable>
               </ScrollView>
             )}
-          </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
     </View>
@@ -388,6 +396,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15,23,42,0.58)',
     justifyContent: 'flex-end',
   },
+  substituteFormScroll: { paddingBottom: 120 },
   modalSheet: {
     backgroundColor: theme.colors.surface,
     borderTopLeftRadius: 24,

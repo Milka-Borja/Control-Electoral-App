@@ -4,7 +4,15 @@ import { useRouter } from 'expo-router';
 import { ShieldCheck } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import {
   ChangePasswordInput,
   changePasswordSchema,
@@ -112,60 +120,74 @@ export function NuevaClaveScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-      <View style={styles.card}>
-        <ShieldCheck size={38} color={theme.colors.secondary} />
-        <Text style={styles.title}>Establecer nueva contraseña</Text>
-        <Text style={styles.desc}>
-          Ingrese su nueva contraseña definitiva para recuperar el acceso a su cuenta.
-        </Text>
-        {!isRecoverySessionReady ? (
-          <Text style={styles.sessionHint}>
-            Abra desde este dispositivo el enlace de recuperación enviado a su correo.
+    <KeyboardAvoidingView
+      style={styles.root}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={0}
+    >
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets={true}
+      >
+        <View style={styles.card}>
+          <ShieldCheck size={38} color={theme.colors.secondary} />
+          <Text style={styles.title}>Establecer nueva contraseña</Text>
+          <Text style={styles.desc}>
+            Ingrese su nueva contraseña definitiva para recuperar el acceso a su cuenta.
           </Text>
-        ) : null}
+          {!isRecoverySessionReady ? (
+            <Text style={styles.sessionHint}>
+              Abra desde este dispositivo el enlace de recuperación enviado a su correo.
+            </Text>
+          ) : null}
 
-        <ControlledInput
-          control={control}
-          name="password"
-          label="Nueva contraseña"
-          placeholder="Mínimo 8 caracteres, mayúscula y número"
-          secureTextEntry
-        />
+          <ControlledInput
+            control={control}
+            name="password"
+            label="Nueva contraseña"
+            placeholder="Mínimo 8 caracteres, mayúscula y número"
+            secureTextEntry
+          />
 
-        <ControlledInput
-          control={control}
-          name="confirmPassword"
-          label="Confirmar contraseña"
-          placeholder="Repita la contraseña"
-          secureTextEntry
-        />
+          <ControlledInput
+            control={control}
+            name="confirmPassword"
+            label="Confirmar contraseña"
+            placeholder="Repita la contraseña"
+            secureTextEntry
+          />
 
-        <Pressable
-          onPress={handleSubmit(onSubmit)}
-          disabled={isSubmitting || !isRecoverySessionReady}
-          style={[
-            styles.btn,
-            (isSubmitting || !isRecoverySessionReady) && styles.btnDisabled,
-          ]}
-        >
-          <Text style={styles.btnText}>
-            {isRecoverySessionReady
-              ? 'Confirmar nueva contraseña'
-              : 'Esperando sesión de recuperación'}
-          </Text>
-        </Pressable>
-      </View>
-    </ScrollView>
+          <Pressable
+            onPress={handleSubmit(onSubmit)}
+            disabled={isSubmitting || !isRecoverySessionReady}
+            style={[
+              styles.btn,
+              (isSubmitting || !isRecoverySessionReady) && styles.btnDisabled,
+            ]}
+          >
+            <Text style={styles.btnText}>
+              {isRecoverySessionReady
+                ? 'Confirmar nueva contraseña'
+                : 'Esperando sesión de recuperación'}
+            </Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  root: { flex: 1 },
+  scrollView: { flex: 1 },
   scroll: {
     flexGrow: 1,
     backgroundColor: theme.colors.background,
     justifyContent: 'center',
     padding: theme.spacing.lg,
+    paddingBottom: 120,
   },
   card: {
     backgroundColor: theme.colors.surface,
